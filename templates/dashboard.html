@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Smart City Command Center — EcoRoute</title>
+  <meta name="description" content="Smart City Waste Management Platform — Live fleet tracking, AI route optimization, digital twin simulation."/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<!-- Restore theme immediately -->
+<script>
+  (function(){
+    const t = localStorage.getItem('ecoroute-theme');
+    if(t === 'light') document.body.dataset.theme = 'light';
+  })();
+</script>
+
+<!-- ── Navbar ────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-brand"><a href="/" style="color:inherit;text-decoration:none">♻️ EcoRoute</a></div>
+  <div class="navbar-links">
+    <a href="/">Home</a>
+    <a href="/dashboard" class="active">Command Center</a>
+    <a href="/user">My Portal</a>
+    <a href="/segregation">Waste Guide</a>
+  </div>
+  <div style="display:flex;gap:.6rem;align-items:center">
+    <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+    <a href="/logout" class="btn btn-sm btn-outline">Logout</a>
+  </div>
+</nav>
+
+<div id="toast-container"></div>
+
+<!-- ── Page Wrapper (below fixed navbar) ─────────────────────────── -->
+<div class="page-wrapper">
+
+  <!-- ── KPI Strip ──────────────────────────────────────────────── -->
+  <div class="kpi-strip">
+    <div class="kpi-card" title="Total waste collected today">
+      <div class="kpi-value" id="kpi-waste">0 kg</div>
+      <div class="kpi-label">Waste Collected</div>
+      <div class="kpi-delta up" id="kpi-waste-delta">▲ Live</div>
+    </div>
+    <div class="kpi-card" title="Active trucks currently on route">
+      <div class="kpi-value" id="kpi-trucks">4 / 4</div>
+      <div class="kpi-label">Active Trucks</div>
+      <div class="kpi-delta up" id="kpi-trucks-delta">● All operational</div>
+    </div>
+    <div class="kpi-card" title="Average fleet fuel level">
+      <div class="kpi-value" id="kpi-fuel">96%</div>
+      <div class="kpi-label">Avg Fuel Level</div>
+      <div class="kpi-delta" id="kpi-fuel-delta">⛽ Healthy</div>
+    </div>
+    <div class="kpi-card" title="CO₂ emissions saved vs. unoptimised routes">
+      <div class="kpi-value" id="kpi-co2">0 kg</div>
+      <div class="kpi-label">CO₂ Saved</div>
+      <div class="kpi-delta up" id="kpi-co2-delta">▲ Eco mode</div>
+    </div>
+    <div class="kpi-card" title="Current overall route efficiency score">
+      <div class="kpi-value" id="kpi-eff">—</div>
+      <div class="kpi-label">Route Efficiency</div>
+      <div class="kpi-delta" id="kpi-eff-delta">⚡ Computing</div>
+    </div>
+    <div class="kpi-card" title="Average time per collection stop">
+      <div class="kpi-value" id="kpi-avgtime">—</div>
+      <div class="kpi-label">Avg Collection Time</div>
+      <div class="kpi-delta" id="kpi-avgtime-delta">🕐 Per stop</div>
+    </div>
+  </div>
+
+  <!-- ── Tab Bar ────────────────────────────────────────────────── -->
+  <div class="cmd-tabbar" role="tablist">
+    <button class="cmd-tab active" data-tab="live"      id="tab-btn-live"      onclick="switchTab('live')"     role="tab" aria-selected="true">
+      <span class="tab-dot"></span>Live Operations
+    </button>
+    <button class="cmd-tab"        data-tab="routes"    id="tab-btn-routes"    onclick="switchTab('routes')"   role="tab">🗺️ Route Optimization</button>
+    <button class="cmd-tab"        data-tab="analytics" id="tab-btn-analytics" onclick="switchTab('analytics')" role="tab">🧠 AI Decision Analytics</button>
+    <button class="cmd-tab"        data-tab="reports"   id="tab-btn-reports"   onclick="switchTab('reports')"  role="tab">📊 Performance Reports</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       TAB 1 — LIVE OPERATIONS
+       ════════════════════════════════════════════════════════════════ -->
+  <div class="tab-content active" id="tab-live" role="tabpanel">
+    <div class="cmd-layout">
+
+      <!-- LEFT SIDEBAR -->
+      <div class="cmd-sidebar">
+
+        <!-- ── Sim Controls ─────────────────────────────────────── -->
+        <div class="panel" style="padding:.65rem">
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-primary btn-sm" id="btn-start" onclick="startSimulation()">▶ Start</button>
+            <button class="btn btn-outline btn-sm" id="btn-pause" onclick="pauseSimulation()">⏸ Pause</button>
+            <button class="btn btn-sm btn-ghost" id="btn-reset" onclick="resetSimulation()">↺ Reset</button>
+            <span class="sim-clock" id="sim-clock">06:00 AM</span>
+          </div>
+          <div style="margin-top:.5rem;display:flex;align-items:center;gap:.5rem">
+            <span class="sim-speed-label">Speed:</span>
+            <input type="range" id="sim-speed" min="1" max="5" value="2" style="flex:1;accent-color:var(--emerald)"/>
+            <span class="sim-speed-label" id="speed-lbl">2×</span>
+          </div>
+        </div>
+
+        <!-- ── Stats Row (existing 4 cards preserved) ───────────── -->
+        <div class="stats-row">
+          <div class="stat-card glass">
+            <div class="stat-value" id="stat-waste">0 kg</div>
+            <div class="stat-label">Total Waste Collected</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-value" id="stat-bins">0</div>
+            <div class="stat-label">Bins Serviced</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-value" id="stat-dist">0 km</div>
+            <div class="stat-label">Distance Covered</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-value" id="stat-eff">0%</div>
+            <div class="stat-label">Efficiency Score</div>
+          </div>
+        </div>
+
+        <!-- ── Truck Fleet (4 trucks) ────────────────────────────── -->
+        <div class="panel" style="padding:.75rem">
+          <h3>🚛 Truck Fleet</h3>
+          <div class="truck-fleet-grid" id="truck-fleet-grid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- ── Constraints Status ────────────────────────────────── -->
+        <div class="panel" style="padding:.75rem">
+          <h3>⚡ Constraints</h3>
+          <div class="constraint-row">
+            <span class="constraint-icon">🚦</span>
+            <span class="constraint-label">Traffic Level</span>
+            <span class="constraint-value oc-badge" id="c-traffic">LOW</span>
+          </div>
+          <div class="constraint-row">
+            <span class="constraint-icon">🛣️</span>
+            <span class="constraint-label">Road Closures</span>
+            <span class="constraint-value" id="c-closures">0 active</span>
+          </div>
+          <div class="constraint-row">
+            <span class="constraint-icon">📦</span>
+            <span class="constraint-label">Priority Bins</span>
+            <span class="constraint-value" id="c-priority">0</span>
+          </div>
+          <div class="constraint-row">
+            <span class="constraint-icon">⏱️</span>
+            <span class="constraint-label">Avg Shift Hours</span>
+            <span class="constraint-value" id="c-shift">0.0 h</span>
+          </div>
+          <div class="constraint-row">
+            <span class="constraint-icon">🤝</span>
+            <span class="constraint-label">Multi-Agent Coord.</span>
+            <span class="constraint-value oc-badge ok" id="c-coord">Active</span>
+          </div>
+        </div>
+
+        <!-- ── Bin Status (existing panel) ──────────────────────── -->
+        <div class="panel" style="padding:.75rem">
+          <h3>🗑️ Bin Status</h3>
+          <div class="bin-grid" id="bin-grid">Loading…</div>
+          <button class="btn btn-sm btn-outline" onclick="refreshBins()"
+            style="margin-top:.8rem;width:100%;justify-content:center">🔄 Refresh</button>
+        </div>
+
+        <!-- ── Alerts (existing panel) ──────────────────────────── -->
+        <div class="panel" style="padding:.75rem">
+          <h3 style="display:flex;align-items:center;gap:.4rem">
+            🔔 Smart Alerts
+            <button onclick="clearAlerts()" title="Clear alerts"
+              style="margin-left:auto;font-size:.68rem;padding:.15rem .5rem;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:color .2s">🗑 Clear</button>
+          </h3>
+          <div id="alerts-list"
+            style="display:flex;flex-direction:column;gap:.4rem;font-size:.82rem">
+          </div>
+          <!-- History toggle -->
+          <button class="alert-hist-btn" onclick="toggleAlertHistory()" id="alert-hist-toggle">
+            <span>📋 Alert History</span>
+            <span class="alert-hist-badge" id="alert-hist-count">0</span>
+          </button>
+          <div id="alert-history-panel"></div>
+        </div>
+
+
+        <!-- ── Residents & Colonies (existing, preserved) ─────── -->
+        <div class="panel" style="padding:.75rem;flex:1">
+          <h3>👥 Residents &amp; Colonies</h3>
+          <div style="max-height:380px;overflow-y:auto;padding-right:.2rem">
+            {% for colony_name, members in colony_residents.items() %}
+            <div class="res-colony-group">
+              <div class="res-colony-header">
+                <span>🏘️</span> {{ colony_name }}
+                <span style="margin-left:auto;font-size:.7rem;color:var(--muted);font-weight:400">{{ members|length }} resident{{ 's' if members|length != 1 else '' }}</span>
+              </div>
+              {% for r in members %}
+              <div class="res-row">
+                <div class="res-avatar">{{ r.name[0] }}</div>
+                <div class="res-info">
+                  <div class="res-name">{{ r.name }}</div>
+                  <div class="res-meta">{{ r.address }} &bull; {{ r.phone }}</div>
+                </div>
+                <span class="res-badge">{{ r.username }}</span>
+              </div>
+              {% endfor %}
+            </div>
+            {% endfor %}
+          </div>
+          <div style="margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--divider);font-size:.75rem;color:var(--muted)">
+            Total: <strong style="color:var(--text)">{{ residents|length }} residents</strong> across <strong style="color:var(--text)">{{ colony_residents|length }} colonies</strong>
+          </div>
+        </div>
+
+        <!-- ── Quick Actions (existing panel) ───────────────────── -->
+        <div class="panel" style="padding:.75rem">
+          <h3>⚡ Quick Actions</h3>
+          <div style="display:flex;flex-direction:column;gap:.5rem">
+            <button class="btn btn-outline btn-sm" onclick="triggerReroute()">🚨 Reroute (Blockage)</button>
+            <button class="btn btn-outline btn-sm" onclick="markAllServiced()">✅ Mark All Serviced</button>
+            <button class="btn btn-sm" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);color:#d97706" onclick="requestEmergency()">⚠️ Emergency Pickup</button>
+          </div>
+        </div>
+
+      </div><!-- end cmd-sidebar -->
+
+      <!-- RIGHT: LIVE MAP AREA -->
+      <div class="cmd-map-area">
+        <!-- Sim Control Bar above map -->
+        <div class="sim-controlbar">
+          <span style="font-size:.78rem;color:var(--muted)">🟢 Alpha &nbsp; 🔵 Beta &nbsp; 🟣 Gamma &nbsp; 🟡 Delta</span>
+          <span style="font-size:.75rem;color:var(--muted);margin-left:.5rem">|</span>
+          <span style="font-size:.75rem;color:var(--muted)">🔴 Full &nbsp; 🟡 Half &nbsp; 🟢 Empty &nbsp; 🟣 Priority</span>
+          <span style="margin-left:auto;font-size:.75rem;color:var(--muted)" id="twin-tick">Sim tick: 0</span>
+        </div>
+
+        <!-- Leaflet city map -->
+        <div id="city-map"></div>
+
+        <!-- Map overlay cards -->
+        <div class="map-overlay">
+          <div class="map-overlay-card">
+            <div class="oc-title">🚦 Traffic</div>
+            <div class="oc-row"><span>Level</span><span class="oc-badge low" id="ov-traffic">LOW</span></div>
+            <div class="oc-row"><span>Road Closures</span><span id="ov-closures" style="font-weight:600">0</span></div>
+          </div>
+          <div class="map-overlay-card">
+            <div class="oc-title">⛽ Resources</div>
+            <div class="oc-row"><span>Avg Fuel</span><span id="ov-fuel" style="font-weight:600;color:var(--emerald)">96%</span></div>
+            <div class="oc-row"><span>Capacity Used</span><span id="ov-cap" style="font-weight:600">—</span></div>
+          </div>
+          <div class="map-overlay-card">
+            <div class="oc-title">📊 Collection</div>
+            <div class="oc-row"><span>Completed</span><span id="ov-completed" style="font-weight:600;color:var(--emerald)">0 bins</span></div>
+            <div class="oc-row"><span>Pending</span><span id="ov-pending" style="font-weight:600">21 bins</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end tab-live -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       TAB 2 — ROUTE OPTIMIZATION
+       ════════════════════════════════════════════════════════════════ -->
+  <div class="tab-content" id="tab-routes" role="tabpanel">
+    <div class="route-opt-layout">
+
+      <!-- Sidebar -->
+      <div class="route-sidebar">
+        <div style="font-family:'Poppins',sans-serif;font-size:.95rem;font-weight:700;color:var(--text-strong)">
+          🗺️ Route Optimization
+        </div>
+
+        <!-- Algorithm Selector -->
+        <div class="algo-select-card">
+          <h4>Select Algorithm</h4>
+          <label class="algo-option selected" id="ao-astar">
+            <span class="algo-dot"></span>A* Search
+            <span style="margin-left:auto;font-size:.68rem;color:var(--muted)">Heuristic</span>
+          </label>
+          <label class="algo-option" id="ao-ucs">
+            <span class="algo-dot"></span>UCS
+            <span style="margin-left:auto;font-size:.68rem;color:var(--muted)">Optimal</span>
+          </label>
+          <label class="algo-option" id="ao-minimax">
+            <span class="algo-dot"></span>Minimax
+            <span style="margin-left:auto;font-size:.68rem;color:var(--muted)">Multi-truck</span>
+          </label>
+
+          <label class="algo-option" id="ao-bfs">
+            <span class="algo-dot"></span>BFS
+            <span style="margin-left:auto;font-size:.68rem;color:var(--muted)">Breadth-first</span>
+          </label>
+          <label class="algo-option" id="ao-dfs">
+            <span class="algo-dot"></span>DFS
+            <span style="margin-left:auto;font-size:.68rem;color:var(--muted)">Depth-first</span>
+          </label>
+          <label class="algo-option" id="ao-bayes">
+            <span class="algo-dot"></span>Bayesian
+            <span style="margin-left:auto;font-size:.68rem;color:var(--muted)">Probabilistic</span>
+          </label>
+        </div>
+
+        <!-- Run Button -->
+        <button class="btn btn-primary btn-sm" onclick="runSelectedAlgorithm()" id="btn-run-algo" style="width:100%;justify-content:center">
+          ▶ Run Algorithm
+        </button>
+
+        <!-- Results Card -->
+        <div class="route-result-card" id="route-results">
+          <h4>📋 Results</h4>
+          <div style="color:var(--muted);font-size:.78rem">Run an algorithm to see results.</div>
+        </div>
+
+        <!-- Node selector -->
+        <div class="algo-select-card">
+          <h4>Route Settings</h4>
+          <div style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Start → End node</div>
+          <div style="display:flex;gap:.4rem;align-items:center">
+            <select id="route-start" class="form-input" style="flex:1;padding:.4rem">
+              <option value="0">Depot</option>
+              <option value="1">Colony A</option>
+              <option value="2">Colony B</option>
+              <option value="3">Colony C</option>
+              <option value="4">Colony D</option>
+              <option value="5">Colony E</option>
+              <option value="6">Colony F</option>
+              <option value="7">Colony G</option>
+              <option value="8">Landfill</option>
+            </select>
+            <span style="color:var(--muted)">→</span>
+            <select id="route-end" class="form-input" style="flex:1;padding:.4rem">
+              <option value="8" selected>Landfill</option>
+              <option value="0">Depot</option>
+              <option value="1">Colony A</option>
+              <option value="2">Colony B</option>
+              <option value="3">Colony C</option>
+              <option value="4">Colony D</option>
+              <option value="5">Colony E</option>
+              <option value="6">Colony F</option>
+              <option value="7">Colony G</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Hidden real checkboxes, driven by JS (constraint panel now floats on map) -->
+        <input type="checkbox" id="const-traffic"  style="display:none">
+        <input type="checkbox" id="const-block"    style="display:none">
+        <input type="checkbox" id="const-highway"  style="display:none">
+        <input type="checkbox" id="const-overtime" style="display:none">
+
+        <!-- Step trace log -->
+        <div class="route-result-card">
+          <h4>🔎 Execution Trace</h4>
+          <div class="trace-log" id="route-trace" style="max-height:160px">
+            <div class="trace-step">Waiting for algorithm run…</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Map area with floating constraints panel -->
+      <div class="route-map-area" style="position:relative">
+        <div id="route-map"></div>
+
+        <!-- Floating Constraints Panel (top-right of graph) -->
+        <div id="floating-constraints" style="
+          position:absolute;
+          top:16px; right:16px;
+          z-index:1000;
+          background:var(--panel);
+          border:1.5px solid var(--divider);
+          border-radius:14px;
+          padding:.85rem 1rem;
+          width:210px;
+          box-shadow:0 4px 24px rgba(0,0,0,.18);
+          backdrop-filter:blur(8px);
+        ">
+          <div style="font-weight:700;font-size:.82rem;color:var(--text-strong);margin-bottom:.5rem">⚙️ Constraints</div>
+          <div style="font-size:.68rem;color:var(--muted);margin-bottom:.65rem">Toggle to modify the graph</div>
+
+          <div class="constraint-card" id="cc-traffic" onclick="toggleConstraint('traffic')">
+            <div class="constraint-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b">🚦</div>
+            <div class="constraint-body">
+              <div class="constraint-title">Heavy Traffic</div>
+              <div class="constraint-sub">A ↔ D — cost ×3</div>
+            </div>
+            <div class="constraint-toggle" id="ct-traffic"></div>
+          </div>
+
+          <div class="constraint-card" id="cc-block" onclick="toggleConstraint('block')">
+            <div class="constraint-icon" style="background:rgba(239,68,68,0.15);color:#ef4444">⛔</div>
+            <div class="constraint-body">
+              <div class="constraint-title">Road Blocked</div>
+              <div class="constraint-sub">D ↔ G — edge removed</div>
+            </div>
+            <div class="constraint-toggle" id="ct-block"></div>
+          </div>
+
+          <div class="constraint-card" id="cc-highway" onclick="toggleConstraint('highway')">
+            <div class="constraint-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6">🛣️</div>
+            <div class="constraint-body">
+              <div class="constraint-title">Highway Open</div>
+              <div class="constraint-sub">B ↔ E — cost ×0.5</div>
+            </div>
+            <div class="constraint-toggle" id="ct-highway"></div>
+          </div>
+
+          <div class="constraint-card" id="cc-overtime" onclick="toggleConstraint('overtime')">
+            <div class="constraint-icon" style="background:rgba(139,92,246,0.15);color:#8b5cf6">⏰</div>
+            <div class="constraint-body">
+              <div class="constraint-title">Overtime Shift</div>
+              <div class="constraint-sub">All costs −20%</div>
+            </div>
+            <div class="constraint-toggle" id="ct-overtime"></div>
+          </div>
+          <!-- Live Route Impact Metrics -->
+          <div id="constraint-metrics" style="margin-top:.7rem;padding:.7rem;background:var(--card-solid);border:1px solid var(--border);border-radius:12px">
+            <div style="font-size:.78rem;color:var(--muted);text-align:center;padding:.3rem">No active constraints — default optimal routes</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end tab-routes -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       TAB 3 — AI DECISION ANALYTICS
+       ════════════════════════════════════════════════════════════════ -->
+  <div class="tab-content" id="tab-analytics" role="tabpanel">
+    <div class="analytics-layout">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <div>
+          <h2 style="font-size:1.1rem;margin-bottom:.15rem">🧠 AI Algorithm Comparison</h2>
+          <p style="font-size:.8rem;color:var(--muted)">Compare all 6 algorithms across distance, fuel, time, waste collected and efficiency score.</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="runCompareAll()" id="btn-compare">⚡ Run All Algorithms</button>
+      </div>
+
+      <!-- 3×2 Algorithm Cards -->
+      <div class="compare-grid" id="algo-cards-grid">
+        <!-- Populated by JS -->
+        <div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:2rem;font-size:.9rem">
+          Click <strong style="color:var(--emerald)">Run All Algorithms</strong> to compare results.
+        </div>
+      </div>
+
+      <!-- Full Comparison Table -->
+      <div class="panel" style="margin-top:1rem;padding:1rem;overflow-x:auto">
+        <h3 style="margin-bottom:.75rem">📊 Full Metrics Table</h3>
+        <div id="compare-table-wrap">
+          <div style="color:var(--muted);font-size:.82rem">Run algorithms to populate table.</div>
+        </div>
+      </div>
+
+      <!-- Multi-Agent Coordination Section -->
+      <div class="panel" style="margin-top:1rem;padding:1rem">
+        <h3 style="margin-bottom:.6rem">🤝 Multi-Agent Coordination</h3>
+        <div id="multiagent-panel" style="color:var(--muted);font-size:.82rem">
+          Run all algorithms to see coordination metrics.
+        </div>
+      </div>
+
+      <!-- Bayesian Decision Analysis Panel -->
+      <div class="panel" style="margin-top:1rem;padding:1rem">
+        <h3 style="margin-bottom:.5rem">🔮 Bayesian Route Analysis</h3>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">
+          Posterior probabilities for each candidate route, computed using Bayes' Theorem with live constraint evidence.
+          <span style="color:#8b5cf6;font-weight:600">P(Route|Evidence) = P(Evidence|Route) × P(Route) / P(Evidence)</span>
+        </p>
+        <div id="bayes-analytics-panel" style="color:var(--muted);font-size:.82rem">
+          Click <strong style="color:var(--emerald)">Run All Algorithms</strong> to compute Bayesian probabilities.
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end tab-analytics -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════
+       TAB 4 — PERFORMANCE REPORTS
+       ════════════════════════════════════════════════════════════════ -->
+  <div class="tab-content" id="tab-reports" role="tabpanel">
+    <div class="reports-layout">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+        <div>
+          <h2 style="font-size:1.1rem;margin-bottom:.15rem">📊 Performance Reports</h2>
+          <p style="font-size:.8rem;color:var(--muted)">AI-powered analytics and predictive waste generation forecasts.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadReports()">🔄 Refresh Reports</button>
+      </div>
+      <div class="reports-grid">
+        <div class="chart-card">
+          <h3>📦 Waste Collected Over Time</h3>
+          <div class="chart-wrap"><canvas id="chart-waste"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>⛽ Fuel Consumption by Truck</h3>
+          <div class="chart-wrap"><canvas id="chart-fuel"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🗑️ Bin Fill Forecast (7-Day)</h3>
+          <div class="chart-wrap"><canvas id="chart-forecast"></canvas></div>
+          <div class="forecast-insight" id="forecast-insight">Loading forecast…</div>
+        </div>
+        <div class="chart-card">
+          <h3>🏆 Collection Efficiency by Zone</h3>
+          <div class="chart-wrap"><canvas id="chart-efficiency"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>⏱️ Average Collection Time per Stop</h3>
+          <div class="chart-wrap"><canvas id="chart-time"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🌿 Carbon Emissions Saved</h3>
+          <div class="chart-wrap"><canvas id="chart-carbon"></canvas></div>
+          <div class="forecast-insight">
+            💡 Optimised routing reduces CO₂ emissions by an estimated <strong style="color:var(--emerald)" id="co2-saving">—</strong> kg/day vs. unoptimised routes.
+          </div>
+        </div>
+        <!-- Bayesian Posterior chart card -->
+        <div class="chart-card" style="grid-column:1/-1">
+          <h3>🔮 Bayesian Route Probability — All Paths</h3>
+          <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">
+            Posterior probability P(Route|Evidence) for every enumerated path (Depot → Landfill) under default conditions.
+            The <span style="color:#8b5cf6;font-weight:700">purple</span> bar is the truck's chosen route.
+          </p>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-bayes"></canvas></div>
+          <div class="forecast-insight" id="bayes-report-insight">
+            Run Reports to load Bayesian analysis.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end tab-reports -->
+
+</div><!-- end page-wrapper -->
+
+<!-- Inject server-side data -->
+<script>
+  const GRAPH = {{ graph_json|safe }};
+  const CITY_MAP = {{ city_map_json|safe }};
+</script>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Dashboard JS -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

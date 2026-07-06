@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Waste Segregation Guide — EcoRoute</title>
+  <meta name="description" content="Learn how to properly segregate dry, wet, hazardous and e-waste. EcoRoute's complete guide to smarter waste disposal."/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    /* ── Page base ── */
+    .wg-page { min-height: 100vh; }
+
+    /* ── Hero ── */
+    .wg-hero {
+      position: relative;
+      min-height: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(135deg, #e8f5e9 0%, #e0f2f1 40%, #e3f2fd 100%);
+      overflow: hidden;
+    }
+    .wg-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(16,185,129,.12) 0%, transparent 55%),
+        radial-gradient(circle at 80% 30%, rgba(6,182,212,.08) 0%, transparent 55%);
+    }
+    .wg-hero-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0.18;
+      mix-blend-mode: luminosity;
+    }
+    .wg-hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 4rem 1.5rem;
+    }
+    .badge-hero {
+      display: inline-block;
+      background: rgba(16,185,129,.2);
+      color: #34d399;
+      border: 1px solid rgba(16,185,129,.5);
+      border-radius: 50px;
+      padding: .35rem 1.1rem;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      margin-bottom: 1.4rem;
+    }
+    .wg-hero-content h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .wg-hero-content h1 span { 
+      background: linear-gradient(90deg, #059669, #0891b2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .wg-hero-content p {
+      color: #475569;
+      font-size: 1.05rem;
+      max-width: 540px;
+      margin: 0 auto 2rem;
+    }
+    .hero-btn-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .hero-btn-primary {
+      display: inline-block;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      color: #fff; font-weight: 700; font-size: .9rem;
+      padding: .7rem 1.8rem; border-radius: 50px;
+      text-decoration: none; transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(16,185,129,.4);
+    }
+    .hero-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(16,185,129,.5); }
+    .hero-btn-ghost {
+      display: inline-block;
+      color: rgba(255,255,255,.8); font-weight: 600; font-size: .9rem;
+      padding: .7rem 1.8rem; border-radius: 50px;
+      border: 1.5px solid rgba(255,255,255,.2);
+      text-decoration: none; transition: all .2s;
+    }
+    .hero-btn-ghost:hover { background: rgba(255,255,255,.08); }
+
+    /* Floating dots decoration */
+    .hero-dot {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.12;
+      animation: float-dot 6s ease-in-out infinite;
+    }
+    @keyframes float-dot {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-18px); }
+    }
+
+    /* ── Stats bar ── */
+    .wg-stats {
+      display: flex;
+      justify-content: center;
+      background: var(--card-bg);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .wg-stat {
+      flex: 1; min-width: 140px;
+      text-align: center;
+      padding: 1.4rem 1.5rem;
+      border-right: 1px solid var(--border);
+    }
+    .wg-stat:last-child { border-right: none; }
+    .wg-stat-num { font-size: 1.7rem; font-weight: 800; background: linear-gradient(90deg,#10b981,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .wg-stat-lbl { font-size: .73rem; color: var(--muted); margin-top: .2rem; }
+
+    /* ── Section heading ── */
+    .section-header {
+      text-align: center;
+      padding: 3.5rem 1.5rem 1.5rem;
+    }
+    .section-header h2 { font-size: 1.75rem; font-weight: 800; color: var(--text-strong); margin-bottom: .4rem; }
+    .section-header p  { color: var(--muted); font-size: .95rem; }
+
+    /* ── Category cards grid ── */
+    .cat-grid {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.8rem;
+    }
+    @media(max-width:700px){ .cat-grid{ grid-template-columns: 1fr; } }
+
+    .cat-card {
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      transition: transform .25s, box-shadow .25s;
+    }
+    .cat-card:hover { transform: translateY(-7px); box-shadow: var(--shadow); }
+
+    .cat-img-wrap { position: relative; overflow: hidden; height: 210px; }
+    .cat-img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .45s;
+    }
+    .cat-card:hover .cat-img { transform: scale(1.07); }
+    .cat-img-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 60%);
+    }
+    .cat-img-badge {
+      position: absolute; top: 12px; left: 14px;
+      padding: .28rem .85rem;
+      border-radius: 50px;
+      font-size: .7rem; font-weight: 700; letter-spacing: .05em;
+      color: #fff;
+    }
+    .cat-img-day {
+      position: absolute; bottom: 12px; right: 14px;
+      background: rgba(0,0,0,.65);
+      color: rgba(255,255,255,.85);
+      font-size: .7rem; padding: .25rem .75rem;
+      border-radius: 50px; backdrop-filter: blur(6px);
+    }
+
+    .cat-body { padding: 1.5rem; }
+    .cat-title { display: flex; align-items: center; gap: .65rem; margin-bottom: .5rem; }
+    .cat-title h3 { font-size: 1.13rem; font-weight: 700; }
+    .cat-desc { font-size: .86rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.6; }
+
+    .items-row { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .tag { padding: .22rem .7rem; border-radius: 50px; font-size: .74rem; font-weight: 600; }
+    .tag-green { background: rgba(16,185,129,.18); color: #34d399; }
+    .tag-amber { background: rgba(245,158,11,.18); color: #f59e0b; }
+    .tag-red   { background: rgba(239,68,68,.18);  color: #f87171; }
+    .tag-cyan  { background: rgba(6,182,212,.18);  color: #22d3ee; }
+
+    .cat-divider { margin: .85rem 0; border: none; border-top: 1px solid var(--border); }
+    .cat-exclude-title { font-size: .72rem; font-weight: 700; color: var(--muted); margin-bottom: .4rem; }
+
+    .cat-alert {
+      margin-top: .75rem;
+      padding: .75rem;
+      border-radius: 10px;
+      font-size: .8rem;
+      line-height: 1.5;
+    }
+
+    /* ── Tips grid ── */
+    .tips-section { max-width: 1180px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.4rem;
+    }
+    @media(max-width:800px){ .tips-grid{ grid-template-columns: 1fr 1fr; } }
+    @media(max-width:500px){ .tips-grid{ grid-template-columns: 1fr; } }
+
+    .tip-card {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      transition: transform .22s, box-shadow .22s;
+    }
+    .tip-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+
+    .tip-img-wrap { position: relative; height: 150px; overflow: hidden; }
+    .tip-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
+    .tip-card:hover .tip-img { transform: scale(1.08); }
+    .tip-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(240,249,255,.4) 0%, transparent 60%); }
+
+    .tip-body { padding: 1.1rem 1.2rem 1.3rem; }
+    .tip-num-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      color: #fff; font-size: .78rem; font-weight: 700;
+      margin-bottom: .55rem;
+    }
+    .tip-body strong { display: block; font-size: .92rem; font-weight: 700; margin-bottom: .3rem; color: var(--text-strong); }
+    .tip-body p { font-size: .79rem; color: var(--muted); line-height: 1.55; margin: 0; }
+
+    /* ── CTA banner ── */
+    .cta-banner {
+      max-width: 1180px; margin: 0 auto 4rem;
+      border-radius: 22px;
+      overflow: hidden;
+      position: relative;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      gap: 2rem; padding: 2.8rem 3rem;
+      flex-wrap: wrap;
+      background: linear-gradient(135deg, #e8f5e9 0%, #e0f7fa 100%);
+      border: 1px solid rgba(16,185,129,.2);
+    }
+    .cta-glow {
+      position: absolute; top: -60px; left: -60px;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16,185,129,.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-glow2 {
+      position: absolute; bottom: -60px; right: -60px;
+      width: 250px; height: 250px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(6,182,212,.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-content { position: relative; z-index: 2; }
+    .cta-content h3 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: .4rem; }
+    .cta-content p  { color: #475569; font-size: .9rem; }
+    .cta-actions { position: relative; z-index: 2; display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    /* ── Footer ── */
+    .wg-footer {
+      text-align: center; padding: 2rem;
+      color: var(--muted);
+      font-size: .83rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<script>
+  (function(){
+    const t = localStorage.getItem('ecoroute-theme');
+    if(t === 'light') document.body.dataset.theme = 'light';
+  })();
+</script>
+<nav class="navbar">
+  <div class="navbar-brand"><a href="/" style="color:inherit;text-decoration:none">♻️ EcoRoute</a></div>
+  <div class="navbar-links">
+    <a href="/">Home</a>
+    <a href="/dashboard">Command Center</a>
+    <a href="/user">My Portal</a>
+    <a href="/segregation" class="active">Waste Guide</a>
+  </div>
+  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+</nav>
+
+<div class="wg-page">
+
+  <!-- ── Hero ── -->
+  <div class="wg-hero">
+    <!-- Floating decoration dots -->
+    <div class="hero-dot" style="width:280px;height:280px;background:#10b981;top:-80px;right:10%;animation-duration:7s"></div>
+    <div class="hero-dot" style="width:180px;height:180px;background:#06b6d4;bottom:-50px;left:8%;animation-duration:5s;animation-delay:1s"></div>
+    <div class="hero-dot" style="width:120px;height:120px;background:#34d399;top:30%;left:30%;animation-duration:8s;animation-delay:.5s"></div>
+
+    <!-- Background image (subtle overlay) -->
+    <img class="wg-hero-img"
+      src="https://images.unsplash.com/photo-1542601906897-c1abad7d7e5a?w=1600&auto=format&fit=crop&q=60"
+      alt="Recycling and sustainability"
+      onerror="this.style.display='none'"/>
+
+    <div class="wg-hero-content fade-up">
+      <div class="badge-hero">♻️ SEGREGATION GUIDE</div>
+      <h1>Waste <span>Segregation</span><br>Made Simple</h1>
+      <p>Proper waste sorting is the first step toward a greener city. Discover what goes where — and why it matters.</p>
+      <div class="hero-btn-row">
+        <a href="#categories" class="hero-btn-primary">Explore Categories ↓</a>
+        <a href="/user" class="hero-btn-ghost">Report a Bin →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stats bar ── -->
+  <div class="wg-stats">
+    <div class="wg-stat">
+      <div class="wg-stat-num">4</div>
+      <div class="wg-stat-lbl">Waste Categories</div>
+    </div>
+    <div class="wg-stat">
+      <div class="wg-stat-num">60%</div>
+      <div class="wg-stat-lbl">Less Landfill with Sorting</div>
+    </div>
+    <div class="wg-stat">
+      <div class="wg-stat-num">21</div>
+      <div class="wg-stat-lbl">Active Collection Bins</div>
+    </div>
+    <div class="wg-stat">
+      <div class="wg-stat-num">Daily</div>
+      <div class="wg-stat-lbl">Wet Waste Pickup</div>
+    </div>
+  </div>
+
+  <!-- ── Category cards ── -->
+  <div class="section-header fade-up" id="categories">
+    <h2>🗂️ Know Your Waste Categories</h2>
+    <p>Each colour, each category — handled differently to protect our planet.</p>
+  </div>
+
+  <div class="cat-grid">
+
+    <!-- Dry Waste -->
+    <div class="cat-card fade-up">
+      <div class="cat-img-wrap">
+        <img class="cat-img"
+          src="https://images.unsplash.com/photo-1604187351574-c75ca79f5807?w=800&auto=format&fit=crop&q=80"
+          alt="Colourful recycling bins"
+          onerror="this.src='https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=80'"/>
+        <div class="cat-img-overlay"></div>
+        <span class="cat-img-badge" style="background:rgba(16,185,129,.85)">🔵 DRY WASTE</span>
+        <span class="cat-img-day">📅 Mon &amp; Thu</span>
+      </div>
+      <div class="cat-body">
+        <div class="cat-title">
+          <span style="font-size:1.7rem">📦</span>
+          <h3 style="color:#34d399">Dry / Recyclable Waste</h3>
+        </div>
+        <p class="cat-desc">Items that are dry and can be recycled, repurposed or sold to scrap dealers.</p>
+        <div style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:.45rem">✅ INCLUDE</div>
+        <div class="items-row">
+          <span class="tag tag-green">Paper</span>
+          <span class="tag tag-green">Cardboard</span>
+          <span class="tag tag-green">Plastic bottles</span>
+          <span class="tag tag-green">Cans</span>
+          <span class="tag tag-green">Glass jars</span>
+          <span class="tag tag-green">Newspapers</span>
+          <span class="tag tag-green">Packaging</span>
+        </div>
+        <hr class="cat-divider"/>
+        <div class="cat-exclude-title">❌ EXCLUDE</div>
+        <div class="items-row">
+          <span class="tag tag-red">Food-stained paper</span>
+          <span class="tag tag-red">Wet items</span>
+          <span class="tag tag-red">Broken glass</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wet Waste -->
+    <div class="cat-card fade-up" style="animation-delay:.1s">
+      <div class="cat-img-wrap">
+        <img class="cat-img"
+          src="https://images.unsplash.com/photo-1498579150354-977475b7ea0b?w=800&auto=format&fit=crop&q=80"
+          alt="Fresh vegetables and organic kitchen scraps"
+          onerror="this.src='https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&auto=format&fit=crop&q=80'"/>
+        <div class="cat-img-overlay"></div>
+        <span class="cat-img-badge" style="background:rgba(217,119,6,.85)">🟢 WET WASTE</span>
+        <span class="cat-img-day">📅 Daily pickup</span>
+      </div>
+      <div class="cat-body">
+        <div class="cat-title">
+          <span style="font-size:1.7rem">🥕</span>
+          <h3 style="color:#f59e0b">Wet / Organic Waste</h3>
+        </div>
+        <p class="cat-desc">Organic material that decomposes quickly and can be composted into rich fertiliser.</p>
+        <div style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:.45rem">✅ INCLUDE</div>
+        <div class="items-row">
+          <span class="tag tag-amber">Food scraps</span>
+          <span class="tag tag-amber">Vegetable peels</span>
+          <span class="tag tag-amber">Garden waste</span>
+          <span class="tag tag-amber">Cooked food</span>
+          <span class="tag tag-amber">Tea bags</span>
+          <span class="tag tag-amber">Eggshells</span>
+        </div>
+        <hr class="cat-divider"/>
+        <div class="cat-exclude-title">❌ EXCLUDE</div>
+        <div class="items-row">
+          <span class="tag tag-red">Plastic bags</span>
+          <span class="tag tag-red">Metal</span>
+          <span class="tag tag-red">Glass</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hazardous -->
+    <div class="cat-card fade-up" style="animation-delay:.2s">
+      <div class="cat-img-wrap">
+        <img class="cat-img"
+          src="https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=800&auto=format&fit=crop&q=80"
+          alt="Hazardous chemical waste containers"
+          onerror="this.src='https://images.unsplash.com/photo-1503596476-1c12a8ba09a9?w=800&auto=format&fit=crop&q=80'"/>
+        <div class="cat-img-overlay"></div>
+        <span class="cat-img-badge" style="background:rgba(239,68,68,.85)">🔴 HAZARDOUS</span>
+        <span class="cat-img-day">📅 Monthly drives</span>
+      </div>
+      <div class="cat-body">
+        <div class="cat-title">
+          <span style="font-size:1.7rem">☢️</span>
+          <h3 style="color:#f87171">Hazardous Waste</h3>
+        </div>
+        <p class="cat-desc">Items that can harm people or the environment — always use designated disposal points.</p>
+        <div style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:.45rem">⚠️ INCLUDES</div>
+        <div class="items-row">
+          <span class="tag tag-red">Batteries</span>
+          <span class="tag tag-red">Paints</span>
+          <span class="tag tag-red">Chemicals</span>
+          <span class="tag tag-red">Medicines</span>
+          <span class="tag tag-red">Pesticides</span>
+          <span class="tag tag-red">Motor oil</span>
+          <span class="tag tag-red">Aerosols</span>
+        </div>
+        <hr class="cat-divider"/>
+        <div class="cat-alert" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171">
+          ⚠️ NEVER mix with regular waste. Use designated hazardous drop-off points only.
+        </div>
+      </div>
+    </div>
+
+    <!-- E-Waste -->
+    <div class="cat-card fade-up" style="animation-delay:.3s">
+      <div class="cat-img-wrap">
+        <img class="cat-img"
+          src="https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=800&auto=format&fit=crop&q=80"
+          alt="Old laptops and electronic devices for recycling"
+          onerror="this.src='https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80'"/>
+        <div class="cat-img-overlay"></div>
+        <span class="cat-img-badge" style="background:rgba(6,182,212,.85)">🔵 E-WASTE</span>
+        <span class="cat-img-day">📅 Certified centres</span>
+      </div>
+      <div class="cat-body">
+        <div class="cat-title">
+          <span style="font-size:1.7rem">💻</span>
+          <h3 style="color:#22d3ee">E-Waste</h3>
+        </div>
+        <p class="cat-desc">Electronic devices contain rare metals and toxic components — always recycle responsibly.</p>
+        <div style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:.45rem">⚠️ INCLUDES</div>
+        <div class="items-row">
+          <span class="tag tag-cyan">Old phones</span>
+          <span class="tag tag-cyan">Laptops</span>
+          <span class="tag tag-cyan">Chargers</span>
+          <span class="tag tag-cyan">TVs</span>
+          <span class="tag tag-cyan">Printers</span>
+          <span class="tag tag-cyan">Hard drives</span>
+          <span class="tag tag-cyan">Keyboards</span>
+        </div>
+        <hr class="cat-divider"/>
+        <div class="cat-alert" style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);color:#22d3ee">
+          📍 Drop off at certified e-waste recycling centres only. Never in regular bins.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Tips ── -->
+  <div class="section-header fade-up">
+    <h2>💡 Pro Tips for Smarter Sorting</h2>
+    <p>Small habits that make a huge difference for our city.</p>
+  </div>
+
+  <div class="tips-section">
+    <div class="tips-grid">
+
+      <div class="tip-card fade-up">
+        <div class="tip-img-wrap">
+          <img class="tip-img"
+            src="https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=600&auto=format&fit=crop&q=80"
+            alt="Rinsing containers before recycling"
+            onerror="this.src='https://images.unsplash.com/photo-1563298723-dcfebaa392e3?w=600&auto=format&fit=crop&q=80'"/>
+          <div class="tip-img-overlay"></div>
+        </div>
+        <div class="tip-body">
+          <div class="tip-num-badge">1</div>
+          <strong>Rinse Before Recycling</strong>
+          <p>Empty and rinse containers before placing in dry waste bins to avoid contamination that ruins entire batches.</p>
+        </div>
+      </div>
+
+      <div class="tip-card fade-up" style="animation-delay:.1s">
+        <div class="tip-img-wrap">
+          <img class="tip-img"
+            src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&auto=format&fit=crop&q=80"
+            alt="Composting kitchen waste at home"
+            onerror="this.src='https://images.unsplash.com/photo-1585515320310-259814833e62?w=600&auto=format&fit=crop&q=80'"/>
+          <div class="tip-img-overlay"></div>
+        </div>
+        <div class="tip-body">
+          <div class="tip-num-badge">2</div>
+          <strong>Compost at Home</strong>
+          <p>A small compost bin cuts truck trips and creates free fertiliser for your garden. Setup takes under 10 minutes.</p>
+        </div>
+      </div>
+
+      <div class="tip-card fade-up" style="animation-delay:.15s">
+        <div class="tip-img-wrap">
+          <img class="tip-img"
+            src="https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=600&auto=format&fit=crop&q=80"
+            alt="Colour-coded recycling bins"
+            onerror="this.src='https://images.unsplash.com/photo-1604187351574-c75ca79f5807?w=600&auto=format&fit=crop&q=80'"/>
+          <div class="tip-img-overlay"></div>
+        </div>
+        <div class="tip-body">
+          <div class="tip-num-badge">3</div>
+          <strong>Colour-Code Your Bins</strong>
+          <p>🟢 Green for wet · 🔵 Blue for dry · 🔴 Red for hazardous. Labels prevent costly cross-contamination.</p>
+        </div>
+      </div>
+
+      <div class="tip-card fade-up" style="animation-delay:.2s">
+        <div class="tip-img-wrap">
+          <img class="tip-img"
+            src="https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600&auto=format&fit=crop&q=80"
+            alt="Eco-friendly reusable bags and minimal packaging"
+            onerror="this.src='https://images.unsplash.com/photo-1592813629122-59e48f98ab17?w=600&auto=format&fit=crop&q=80'"/>
+          <div class="tip-img-overlay"></div>
+        </div>
+        <div class="tip-body">
+          <div class="tip-num-badge">4</div>
+          <strong>Reduce First</strong>
+          <p>The best waste is no waste at all. Choose products with minimal or compostable packaging whenever possible.</p>
+        </div>
+      </div>
+
+      <div class="tip-card fade-up" style="animation-delay:.25s">
+        <div class="tip-img-wrap">
+          <img class="tip-img"
+            src="https://images.unsplash.com/photo-1512428813834-c702c7702b78?w=600&auto=format&fit=crop&q=80"
+            alt="Reporting waste via mobile app"
+            onerror="this.src='https://images.unsplash.com/photo-1601597111158-2fceff292cdc?w=600&auto=format&fit=crop&q=80'"/>
+          <div class="tip-img-overlay"></div>
+        </div>
+        <div class="tip-body">
+          <div class="tip-num-badge">5</div>
+          <strong>Report Full Bins Instantly</strong>
+          <p>Use the Resident Portal to report overflowing bins so our AI re-routes trucks immediately — no delays.</p>
+        </div>
+      </div>
+
+      <div class="tip-card fade-up" style="animation-delay:.3s">
+        <div class="tip-img-wrap">
+          <img class="tip-img"
+            src="https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=600&auto=format&fit=crop&q=80"
+            alt="E-waste drop-off and battery recycling"
+            onerror="this.src='https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=600&auto=format&fit=crop&q=80'"/>
+          <div class="tip-img-overlay"></div>
+        </div>
+        <div class="tip-body">
+          <div class="tip-num-badge">6</div>
+          <strong>Use Drop-off Points</strong>
+          <p>Batteries, medicines and electronics have dedicated drop-off kiosks in every colony. Never bin them at home.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── CTA Banner ── -->
+  <div class="cta-banner" style="padding-left:1.5rem;padding-right:1.5rem;">
+    <div class="cta-glow"></div>
+    <div class="cta-glow2"></div>
+    <div class="cta-content">
+      <h3>🌱 Ready to make a difference?</h3>
+      <p>Report a full bin, track your collection, or explore the city dashboard.</p>
+    </div>
+    <div class="cta-actions">
+      <a href="/user" class="hero-btn-primary">My Portal →</a>
+      <a href="/dashboard" class="hero-btn-ghost" style="border-color:rgba(16,185,129,.4);color:#34d399">Live Dashboard →</a>
+    </div>
+  </div>
+
+  <div class="wg-footer">
+    ♻️ EcoRoute — Smart Waste Collection System &nbsp;|&nbsp; Smart City Initiative
+  </div>
+
+</div><!-- end wg-page -->
+
+<script>
+function toggleTheme(){
+  const b=document.body, btn=document.getElementById('theme-btn');
+  if(b.dataset.theme==='light'){
+    b.removeAttribute('data-theme'); btn.textContent='🌙 Dark';
+    localStorage.removeItem('ecoroute-theme');
+  } else {
+    b.dataset.theme='light'; btn.textContent='☀️ Light';
+    localStorage.setItem('ecoroute-theme','light');
+  }
+}
+(function(){
+  const btn = document.getElementById('theme-btn');
+  if(document.body.dataset.theme === 'light') btn.textContent = '☀️ Light';
+})();
+</script>
+</body>
+</html>

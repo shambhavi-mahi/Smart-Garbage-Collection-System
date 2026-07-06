@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Colony Dashboard — EcoRoute</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    .dash-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1rem;
+      padding: 1rem;
+      min-height: calc(100vh - 70px);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .dash-left {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .dash-right {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+
+    .panel {
+      padding: 1.1rem;
+      background: var(--card-solid);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .panel h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--emerald);
+      margin-bottom: .8rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    .map-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 400px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--card-solid);
+      border: 1px solid var(--border);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .8rem;
+    }
+
+    .truck-info {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .truck-card {
+      flex: 1;
+      padding: .9rem;
+      border-radius: var(--radius-sm);
+      font-size: .82rem;
+      color: var(--text);
+    }
+
+    .t1-card {
+      background: rgba(16, 185, 129, .08);
+      border: 1px solid rgba(16, 185, 129, .25);
+    }
+
+    .t2-card {
+      background: rgba(6, 182, 212, .08);
+      border: 1px solid rgba(6, 182, 212, .25);
+    }
+
+    .truck-card h4 {
+      font-family: 'Poppins', sans-serif;
+      font-size: .9rem;
+      font-weight: 600;
+      margin-bottom: .5rem;
+    }
+
+    .t1-card h4 {
+      color: var(--emerald);
+    }
+
+    .t2-card h4 {
+      color: var(--cyan);
+    }
+
+    .route-tag {
+      display: inline-block;
+      padding: .2rem .5rem;
+      border-radius: 4px;
+      margin: .2rem;
+      font-size: .75rem;
+    }
+
+    .t1-tag {
+      background: rgba(16, 185, 129, .15);
+      color: var(--emerald);
+    }
+
+    .t2-tag {
+      background: rgba(6, 182, 212, .15);
+      color: var(--cyan);
+    }
+
+    /* Minimax comparison */
+    .mini-row {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      font-size: .8rem;
+      padding: .3rem 0;
+      border-bottom: 1px solid var(--divider);
+      color: var(--text);
+    }
+
+    .mini-row:last-child {
+      border: none;
+    }
+
+    /* Bin grid */
+    .bin-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .6rem;
+    }
+
+    .bin-item {
+      padding: .6rem .8rem;
+      border-radius: var(--radius-sm);
+      background: var(--card-solid);
+      border: 1px solid var(--border);
+      font-size: .8rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      color: var(--text);
+    }
+
+    /* Calendar */
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: .6rem;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Schedule table */
+    .sched-row {
+      display: flex;
+      justify-content: space-between;
+      padding: .35rem 0;
+      border-bottom: 1px solid var(--divider);
+      font-size: .78rem;
+      color: var(--text);
+    }
+
+    /* Residents panel */
+    .res-colony-group { margin-bottom: 1rem; }
+    .res-colony-header {
+      display: flex; align-items: center; gap: .5rem;
+      font-family: 'Poppins', sans-serif; font-size: .82rem;
+      font-weight: 700; color: var(--emerald);
+      padding: .4rem 0; border-bottom: 1px solid var(--divider);
+      margin-bottom: .5rem;
+    }
+    .res-row {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .45rem .5rem; border-radius: 8px;
+      transition: background .15s;
+      font-size: .78rem; color: var(--text);
+    }
+    .res-row:hover { background: rgba(16,185,129,.06); }
+    .res-avatar {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--emerald), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; color: #fff;
+    }
+    .res-info { flex: 1; min-width: 0; }
+    .res-name { font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .res-meta { color: var(--muted); font-size: .7rem; }
+    .res-badge { font-size: .68rem; padding: .15rem .5rem; border-radius: 4px; background: rgba(6,182,212,.12); color: var(--cyan); border: 1px solid rgba(6,182,212,.25); white-space: nowrap; }
+
+    @media(max-width:900px) {
+      .dash-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Restore theme immediately -->
+  <script>
+    (function(){
+      const t = localStorage.getItem('ecoroute-theme');
+      if(t === 'light') document.body.dataset.theme = 'light';
+    })();
+  </script>
+  <nav class="navbar">
+    <div class="navbar-brand"><a href="/" style="color:inherit;text-decoration:none">♻️ EcoRoute</a></div>
+    <div class="navbar-links">
+      <a href="/">Home</a>
+      <a href="/visualizer">Algorithm Lab</a>
+      <a href="/dashboard" class="active">Dashboard</a>
+      <a href="/user">My Portal</a>
+      <a href="/segregation">Waste Guide</a>
+    </div>
+    <div style="display:flex;gap:.6rem;align-items:center">
+      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+      <a href="/logout" class="btn btn-sm btn-outline">Logout</a>
+    </div>
+  </nav>
+
+  <div id="toast-container"></div>
+
+  <div class="page-wrapper">
+    <div class="dash-layout">
+
+      <!-- LEFT COLUMN -->
+      <div class="dash-left">
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+          <div class="stat-card glass">
+            <div class="stat-value" id="stat-waste">0 kg</div>
+            <div class="stat-label">Total Waste Collected</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-value" id="stat-bins">0</div>
+            <div class="stat-label">Bins Serviced</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-value" id="stat-dist">0 km</div>
+            <div class="stat-label">Distance Covered</div>
+          </div>
+          <div class="stat-card glass">
+            <div class="stat-value" id="stat-eff">0%</div>
+            <div class="stat-label">Efficiency Score</div>
+          </div>
+        </div>
+
+        <!-- Truck Status -->
+        <div class="panel">
+          <h3>🚛 Truck Status</h3>
+          <div class="truck-info">
+            <div class="truck-card t1-card">
+              <h4>🟢 Truck 1</h4>
+              <div style="margin-bottom:.4rem">Route: <span id="t1-route">Computing…</span></div>
+              <div>Current: <strong id="t1-cur">Depot</strong></div>
+              <div>ETA Landfill: <strong id="t1-eta">—</strong></div>
+              <div style="margin-top:.5rem">
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill" id="t1-prog" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="truck-card t2-card">
+              <h4>🔵 Truck 2</h4>
+              <div style="margin-bottom:.4rem">Route: <span id="t2-route">Computing…</span></div>
+              <div>Current: <strong id="t2-cur">Depot</strong></div>
+              <div>ETA Landfill: <strong id="t2-eta">—</strong></div>
+              <div style="margin-top:.5rem">
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill" id="t2-prog"
+                    style="width:0%;background:linear-gradient(90deg,var(--cyan),var(--lime))"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colony Map -->
+        <div class="panel" style="flex:1">
+          <h3>🗺️ Colony Map — Live Tracking</h3>
+          <div style="display:flex;gap:.8rem;margin-bottom:.8rem;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="startSimulation()">▶ Start Simulation</button>
+            <button class="btn btn-outline btn-sm" onclick="pauseSimulation()">⏸ Pause</button>
+            <button class="btn btn-sm btn-ghost" onclick="resetSimulation()">↺ Reset</button>
+            <span style="margin-left:auto;font-size:.78rem;color:var(--muted);align-self:center">🟢 Truck 1 &nbsp; 🔵 Truck 2</span>
+          </div>
+          <div class="map-wrap">
+            <svg id="dash-svg" viewBox="0 0 780 530" xmlns="http://www.w3.org/2000/svg"
+              style="width:100%;height:100%;display:block">
+              <g id="d-edges"></g>
+              <g id="d-nodes"></g>
+              <g id="d-paths"></g>
+              <g id="d-trucks"></g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Minimax vs A* Comparison -->
+        <div class="panel">
+          <h3>🆚 Minimax vs A* Comparison</h3>
+          <div id="minimax-table" style="font-size:.82rem;color:var(--muted)">Click Start Simulation to compute routes.
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="dash-right">
+
+        <!-- Bin Status -->
+        <div class="panel">
+          <h3>🗑️ Bin Status</h3>
+          <div class="bin-grid" id="bin-grid">Loading…</div>
+          <button class="btn btn-sm btn-outline" onclick="refreshBins()"
+            style="margin-top:.8rem;width:100%;justify-content:center">🔄 Refresh</button>
+        </div>
+
+        <!-- Alerts -->
+        <div class="panel">
+          <h3>🔔 Alerts</h3>
+          <div id="alerts-list"
+            style="display:flex;flex-direction:column;gap:.5rem;font-size:.82rem;max-height:200px;overflow-y:auto">
+          </div>
+        </div>
+
+        <!-- Residents & Colonies (replaces Schedule) -->
+        <div class="panel" style="flex:1">
+          <h3>👥 Residents &amp; Colonies</h3>
+          <div style="max-height:420px;overflow-y:auto;padding-right:.2rem">
+            {% for colony_name, members in colony_residents.items() %}
+            <div class="res-colony-group">
+              <div class="res-colony-header">
+                <span>🏘️</span> {{ colony_name }}
+                <span style="margin-left:auto;font-size:.7rem;color:var(--muted);font-weight:400">{{ members|length }} resident{{ 's' if members|length != 1 else '' }}</span>
+              </div>
+              {% for r in members %}
+              <div class="res-row">
+                <div class="res-avatar">{{ r.name[0] }}</div>
+                <div class="res-info">
+                  <div class="res-name">{{ r.name }}</div>
+                  <div class="res-meta">{{ r.address }} &bull; {{ r.phone }}</div>
+                </div>
+                <span class="res-badge">{{ r.username }}</span>
+              </div>
+              {% endfor %}
+            </div>
+            {% endfor %}
+          </div>
+          <div style="margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--divider);font-size:.75rem;color:var(--muted)">
+            Total: <strong style="color:var(--text)">{{ residents|length }} residents</strong> across <strong style="color:var(--text)">{{ colony_residents|length }} colonies</strong>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="panel">
+          <h3>⚡ Quick Actions</h3>
+          <div style="display:flex;flex-direction:column;gap:.5rem">
+            <button class="btn btn-outline btn-sm" onclick="toast('Emergency route recalculated!','success')">🚨 Reroute
+              (Blockage)</button>
+            <button class="btn btn-outline btn-sm" onclick="markAllServiced()">✅ Mark All Serviced</button>
+            <button class="btn btn-sm"
+              style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);color:#d97706"
+              onclick="requestEmergency()">⚠️ Emergency Pickup</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GRAPH = {{ graph_json| safe }};
+  </script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+
+</html>

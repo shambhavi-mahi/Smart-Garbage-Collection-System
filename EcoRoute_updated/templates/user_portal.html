@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>My Portal — EcoRoute</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    .portal-layout { max-width:1000px; margin:0 auto; padding:2rem 1rem; }
+    .portal-header { display:flex; align-items:center; gap:1rem; margin-bottom:2rem; }
+    .avatar { width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--emerald),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0; }
+    .tabs { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .tab-btn { padding:.55rem 1.2rem;border-radius:50px;border:1px solid var(--border);background:var(--input-bg);color:var(--muted);font-family:'Poppins',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;transition:all var(--transition); }
+    .tab-btn.active { background:linear-gradient(135deg,var(--emerald),var(--cyan));border-color:transparent;color:#fff; }
+    .tab-pane { display:none; }
+    .tab-pane.active { display:block; }
+    .form-card { padding:1.5rem;background:var(--card-solid);border:1px solid var(--border);border-radius:var(--radius); }
+    .success-banner { padding:.8rem 1.2rem;border-radius:var(--radius-sm);background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--emerald);font-size:.88rem;margin-bottom:1rem;display:none; }
+    .panel-card {
+      padding: 1.2rem; background: var(--card-solid);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .panel-card h4 { color:var(--emerald); margin-bottom:.5rem; }
+
+    /* ── Pickup Hero ── */
+    #pickup-hero {
+      display: flex; align-items: center; justify-content: center;
+      gap: 1.2rem; flex-wrap: wrap; margin: 1.2rem 0 1.8rem;
+    }
+    .pickup-hero-card {
+      flex: 1; min-width: 200px; max-width: 300px;
+      padding: 1.6rem 1.4rem; border-radius: 18px;
+      text-align: center; position: relative; overflow: hidden;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .pickup-hero-card:hover { transform: translateY(-4px); }
+    .last-card {
+      background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(16,185,129,.04));
+      border: 1.5px solid rgba(16,185,129,.35);
+      box-shadow: 0 4px 24px rgba(16,185,129,.10);
+    }
+    .next-card {
+      background: linear-gradient(135deg, rgba(6,182,212,.15), rgba(6,182,212,.05));
+      border: 1.5px solid rgba(6,182,212,.4);
+      box-shadow: 0 4px 24px rgba(6,182,212,.12);
+    }
+    .phc-icon { font-size: 2.4rem; margin-bottom: .5rem; }
+    .phc-label {
+      font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .4rem;
+    }
+    .phc-date {
+      font-family: 'Poppins', sans-serif; font-size: 1.25rem;
+      font-weight: 700; color: var(--text-strong); margin-bottom: .3rem;
+    }
+    .phc-sub { font-size: .8rem; color: var(--muted); }
+    .phc-countdown {
+      display: inline-block; margin-top: .7rem;
+      padding: .3rem .85rem; border-radius: 50px;
+      font-size: .78rem; font-weight: 700;
+      background: rgba(6,182,212,.15); color: var(--cyan);
+      border: 1px solid rgba(6,182,212,.3);
+    }
+    .phc-urgent {
+      background: rgba(245,158,11,.18) !important;
+      color: #f59e0b !important; border-color: rgba(245,158,11,.4) !important;
+      animation: pulse-badge 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-badge {
+      0%,100% { opacity:1; } 50% { opacity:.6; }
+    }
+    .phc-divider {
+      font-size: 1.8rem; color: var(--muted); line-height: 1;
+      opacity: .5; flex-shrink: 0;
+      animation: bounce-arrow 2s ease-in-out infinite;
+    }
+    @keyframes bounce-arrow {
+      0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); }
+    }
+
+    /* ── Schedule item list ── */
+    #schedule-cards { margin-top: .5rem; display: flex; flex-direction: column; gap: .6rem; }
+    .sched-item {
+      display: flex; align-items: center; gap: 1rem;
+      padding: .85rem 1.1rem;
+      border-radius: 12px;
+      background: var(--card-solid);
+      border: 1px solid var(--border);
+      transition: border-color .2s, background .2s;
+      color: var(--text);
+    }
+    .sched-item:hover { border-color: rgba(16,185,129,.35); }
+    .sched-mine {
+      border-color: rgba(6,182,212,.45) !important;
+      background: linear-gradient(90deg, rgba(6,182,212,.06), var(--card-solid)) !important;
+      box-shadow: 0 2px 14px rgba(6,182,212,.08);
+    }
+    .sched-mine::before { content: '★ My Colony'; display: none; }
+    .sched-left { min-width: 80px; }
+    .sched-colony { font-family:'Poppins',sans-serif; font-size:.92rem; font-weight:700; color:var(--text-strong); }
+    .sched-truck { font-size:.72rem; color:var(--muted); margin-top:.15rem; }
+    .sched-mid { flex: 1; display: flex; flex-direction: column; gap:.2rem; font-size:.8rem; }
+    .sched-last { color: var(--muted); } .sched-last strong { color:var(--emerald); }
+    .sched-next { color: var(--muted); } .sched-next strong { color:var(--cyan); }
+    .sched-badge {
+      padding: .28rem .75rem; border-radius: 50px;
+      font-size: .72rem; font-weight: 700; white-space: nowrap;
+    }
+    .badge-today { background: rgba(245,158,11,.18); color:#f59e0b; border:1px solid rgba(245,158,11,.35); animation: pulse-badge 1.4s ease-in-out infinite; }
+    .badge-soon { background: rgba(6,182,212,.15); color:var(--cyan); border:1px solid rgba(6,182,212,.3); }
+    .badge-upcoming { background: rgba(16,185,129,.1); color:var(--emerald); border:1px solid rgba(16,185,129,.25); }
+
+    /* ── Colony Selector ── */
+    .colony-selector-wrap {
+      background: var(--card-solid); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1rem 1.2rem;
+      margin-bottom: 1.4rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .colony-sel-label {
+      font-family: 'Poppins', sans-serif; font-weight: 700;
+      font-size: .85rem; color: var(--text-strong); white-space: nowrap;
+    }
+    .colony-pills { display: flex; gap: .45rem; flex-wrap: wrap; }
+    .cpill {
+      padding: .38rem .95rem; border-radius: 50px;
+      border: 1.5px solid var(--border);
+      background: var(--input-bg); color: var(--muted);
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: .8rem;
+      cursor: pointer; transition: all .2s ease;
+    }
+    .cpill:hover { border-color: rgba(16,185,129,.5); color: var(--emerald); background: rgba(16,185,129,.07); }
+    .cpill.active {
+      background: linear-gradient(135deg, var(--emerald), var(--cyan));
+      border-color: transparent; color: #fff;
+      box-shadow: 0 3px 12px rgba(16,185,129,.3);
+    }
+  </style>
+</head>
+<body>
+<!-- Restore theme immediately -->
+<script>
+  (function(){
+    const t = localStorage.getItem('ecoroute-theme');
+    if(t === 'light') document.body.dataset.theme = 'light';
+  })();
+</script>
+<nav class="navbar">
+  <div class="navbar-brand"><a href="/" style="color:inherit;text-decoration:none">♻️ EcoRoute</a></div>
+  <div class="navbar-links">
+    <a href="/">Home</a>
+    <a href="/visualizer">Algorithm Lab</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/user" class="active">My Portal</a>
+    <a href="/segregation">Waste Guide</a>
+  </div>
+  <div style="display:flex;gap:.6rem;align-items:center">
+    <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+    <a href="/logout" class="btn btn-sm btn-outline">Logout</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<div class="page-wrapper">
+  <div class="portal-layout">
+    <div class="portal-header">
+      <div class="avatar">👤</div>
+      <div>
+        <h2 style="margin-bottom:.2rem">Welcome, {{ user_name }}</h2>
+        <p style="font-size:.85rem">Colony {{ user_colony }} &bull; {{ user_address }}</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('schedule',this)">📅 Schedule</button>
+      <button class="tab-btn" onclick="showTab('bins',this)">🗑️ Bin Status</button>
+      <button class="tab-btn" onclick="showTab('report',this)">🚨 Report Issue</button>
+      <button class="tab-btn" onclick="showTab('request',this)">📦 Request Pickup</button>
+      <button class="tab-btn" onclick="showTab('guide',this)">♻️ Waste Guide</button>
+    </div>
+
+    <!-- Schedule Tab -->
+    <div class="tab-pane active" id="tab-schedule">
+      <h3 style="margin-bottom:.3rem">📅 Your Collection Schedule</h3>
+      <p style="font-size:.84rem;color:var(--muted);margin-bottom:1.2rem">Select your colony to see your personalised pickup schedule.</p>
+
+      <!-- Colony Selector -->
+      <div class="colony-selector-wrap">
+        <div class="colony-sel-label">🏘️ My Colony</div>
+        <div class="colony-pills" id="colony-pills">
+          <button class="cpill {% if user_colony == 'A' %}active{% endif %}" data-col="A" onclick="selectColony('A',this)">Colony A</button>
+          <button class="cpill {% if user_colony == 'B' %}active{% endif %}" data-col="B" onclick="selectColony('B',this)">Colony B</button>
+          <button class="cpill {% if user_colony == 'C' %}active{% endif %}" data-col="C" onclick="selectColony('C',this)">Colony C</button>
+          <button class="cpill {% if user_colony == 'D' %}active{% endif %}" data-col="D" onclick="selectColony('D',this)">Colony D</button>
+          <button class="cpill {% if user_colony == 'E' %}active{% endif %}" data-col="E" onclick="selectColony('E',this)">Colony E</button>
+          <button class="cpill {% if user_colony == 'F' %}active{% endif %}" data-col="F" onclick="selectColony('F',this)">Colony F</button>
+          <button class="cpill {% if user_colony == 'G' %}active{% endif %}" data-col="G" onclick="selectColony('G',this)">Colony G</button>
+        </div>
+      </div>
+
+      <!-- Hero: Last & Next Pickup -->
+      <div id="pickup-hero"><!-- filled by JS --></div>
+
+      <!-- Full Schedule Table -->
+      <div style="font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem">All Colonies Schedule</div>
+      <div id="schedule-cards"></div>
+    </div>
+
+    <!-- Bin Status Tab -->
+    <div class="tab-pane" id="tab-bins">
+      <h3 style="margin-bottom:1rem">🗑️ Your Area Bin Status</h3>
+      <div id="user-bins" style="display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem"></div>
+      <button class="btn btn-outline" onclick="loadBins()" style="margin-top:1rem">🔄 Refresh Status</button>
+    </div>
+
+    <!-- Report Tab -->
+    <div class="tab-pane" id="tab-report">
+      <h3 style="margin-bottom:1rem">🚨 Report Missed Collection</h3>
+      <div class="form-card">
+        <div id="report-success" class="success-banner">✅ Report submitted! We'll dispatch a truck within 24 hours.</div>
+        <div class="form-group">
+          <label class="form-label">Colony / Area</label>
+          <select class="form-input" id="report-colony">
+            <option>Colony A</option><option>Colony B</option><option selected>Colony D</option>
+            <option>Colony C</option><option>Colony E</option><option>Colony F</option><option>Colony G</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Missed Collection</label>
+          <input type="date" class="form-input" id="report-date"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-input" rows="3" id="report-desc" placeholder="Describe the issue…" style="resize:vertical"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="submitReport()">📤 Submit Report</button>
+      </div>
+    </div>
+
+    <!-- Request Pickup Tab -->
+    <div class="tab-pane" id="tab-request">
+      <h3 style="margin-bottom:1rem">📦 Request Special Pickup</h3>
+      <div class="form-card">
+        <div id="pickup-success" class="success-banner">✅ Pickup request submitted! Estimated time: 2–4 hours.</div>
+        <div class="form-group">
+          <label class="form-label">Waste Type</label>
+          <select class="form-input" id="pickup-type">
+            <option>Dry Waste</option><option>Wet Waste</option>
+            <option>Hazardous</option><option>E-Waste</option><option>Bulk / Furniture</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <input type="text" class="form-input" placeholder="Enter your address" id="pickup-addr"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preferred Time</label>
+          <input type="datetime-local" class="form-input" id="pickup-time"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Additional Notes</label>
+          <textarea class="form-input" rows="2" placeholder="Any special instructions…" style="resize:vertical"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="submitPickup()">📤 Request Pickup</button>
+      </div>
+    </div>
+
+    <!-- Guide Tab -->
+    <div class="tab-pane" id="tab-guide">
+      <h3 style="margin-bottom:1rem">♻️ Quick Waste Segregation Guide</h3>
+      <div class="grid-2">
+        <div class="panel-card glass" style="border:1px solid rgba(16,185,129,.3)">
+          <div style="font-size:2rem;margin-bottom:.6rem">📦</div>
+          <h4>Dry Waste</h4>
+          <p style="font-size:.82rem">Paper, cardboard, plastic bottles, cans, glass jars. Keep clean and dry before disposal.</p>
+        </div>
+        <div class="panel-card glass" style="border:1px solid rgba(245,158,11,.3)">
+          <div style="font-size:2rem;margin-bottom:.6rem">🥕</div>
+          <h4 style="color:#d97706">Wet Waste</h4>
+          <p style="font-size:.82rem">Food scraps, vegetable peels, garden waste. Use separate green bins.</p>
+        </div>
+        <div class="panel-card glass" style="border:1px solid rgba(239,68,68,.3)">
+          <div style="font-size:2rem;margin-bottom:.6rem">☢️</div>
+          <h4 style="color:#ef4444">Hazardous</h4>
+          <p style="font-size:.82rem">Batteries, chemicals, paints, medicines. Never mix with regular waste — use special drop-offs.</p>
+        </div>
+        <div class="panel-card glass" style="border:1px solid rgba(6,182,212,.3)">
+          <div style="font-size:2rem;margin-bottom:.6rem">💻</div>
+          <h4 style="color:var(--cyan)">E-Waste</h4>
+          <p style="font-size:.82rem">Old phones, chargers, laptops, TVs. Drop at certified e-waste collection centres.</p>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:1.5rem">
+        <a href="/segregation" class="btn btn-outline">View Full Guide →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+<script>
+// Seed selectedColony from server-side session (overrides localStorage default)
+selectedColony = '{{ user_colony }}';
+restoreColonyPill();
+buildSchedule();
+startCountdownTicker();
+loadBins();
+</script>
+</body>
+</html>

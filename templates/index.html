@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>EcoRoute — Smart Waste Collection</title>
+  <meta name="description" content="AI-powered smart waste collection route optimization system for modern cities."/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      text-align: center; padding: 2rem;
+      position: relative; overflow: hidden;
+    }
+    /* Photo background */
+    .hero-img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: center 45%;
+      z-index: 0;
+      animation: heroZoom 12s ease-in-out infinite alternate;
+    }
+    @keyframes heroZoom {
+      from { transform: scale(1); }
+      to   { transform: scale(1.06); }
+    }
+    /* Dark overlay */
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0; z-index: 1;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(16,185,129,.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 20%, rgba(6,182,212,.14) 0%, transparent 50%),
+        linear-gradient(to bottom, rgba(5,15,30,.55) 0%, rgba(5,15,30,.72) 100%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 1rem; border-radius: 50px; margin-bottom: 1.5rem;
+      background: rgba(16,185,129,.2); border: 1px solid rgba(16,185,129,.45);
+      font-size: 0.82rem; font-weight: 600; color: #6ee7b7;
+      font-family: 'Poppins', sans-serif;
+      backdrop-filter: blur(8px); position: relative; z-index: 2;
+    }
+    .hero-gradient-text {
+      background: linear-gradient(135deg, #ffffff 0%, #6ee7b7 60%, #34d399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 900;
+      letter-spacing: -.5px;
+    }
+    .hero h1 {
+      max-width: 800px; margin-bottom: 1.2rem;
+      position: relative; z-index: 2;
+      color: #fff; font-weight: 900;
+      text-shadow: 0 2px 20px rgba(0,0,0,.6);
+      line-height: 1.15;
+    }
+    .hero p {
+      max-width: 560px; font-size: 1.1rem; margin-bottom: 2.5rem;
+      color: rgba(255,255,255,.88); position: relative; z-index: 2;
+      text-shadow: 0 1px 6px rgba(0,0,0,.5);
+    }
+    .hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; position: relative; z-index: 2; }
+    /* floating icons */
+    .float-icons {
+      position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2;
+    }
+    .fi {
+      position: absolute; font-size: 2rem; opacity: 0.12;
+      animation: float 4s ease-in-out infinite;
+    }
+    .fi:nth-child(1){ top:10%; left:5%;  animation-delay:0s; }
+    .fi:nth-child(2){ top:20%; right:8%; animation-delay:1s; }
+    .fi:nth-child(3){ top:60%; left:3%;  animation-delay:2s; }
+    .fi:nth-child(4){ top:75%; right:5%; animation-delay:0.5s; }
+    .fi:nth-child(5){ top:40%; left:15%; animation-delay:1.5s; }
+    /* Features Section */
+    .features { padding: 5rem 2rem; max-width: 1200px; margin: 0 auto; }
+    .feature-card {
+      padding: 2rem; border-radius: var(--radius); text-align: center;
+      background: var(--card-solid); border: 1px solid var(--border);
+      transition: all var(--transition); position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(16,185,129,.06), rgba(6,182,212,.06));
+      opacity: 0; transition: opacity var(--transition);
+    }
+    .feature-card:hover { transform: translateY(-6px); border-color: rgba(16,185,129,.35); box-shadow: var(--shadow); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+    .feature-card h3 { margin-bottom: 0.6rem; color: var(--text-strong); }
+    /* Role cards */
+    .roles { padding: 4rem 2rem; max-width: 800px; margin: 0 auto; text-align: center; }
+    .roles h2 { margin-bottom: 0.8rem; }
+    .roles p  { margin-bottom: 3rem; }
+    .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .role-card {
+      padding: 2.5rem 2rem; border-radius: var(--radius);
+      border: 2px solid var(--border); cursor: pointer;
+      text-decoration: none; display: block;
+      transition: all var(--transition); position: relative; overflow: hidden;
+      background: var(--card-bg);
+    }
+    .role-card.user-card:hover  { border-color: var(--emerald); transform: translateY(-5px); box-shadow: var(--shadow); }
+    .role-card.admin-card:hover { border-color: var(--cyan);    transform: translateY(-5px); box-shadow: var(--shadow); }
+    .role-card .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .role-card h3 { font-family: 'Poppins',sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--text-strong); margin-bottom: 0.5rem; }
+    .role-card p  { font-size: 0.9rem; }
+    .role-card .arrow { margin-top: 1.5rem; font-size: 1.5rem; color: var(--emerald); }
+    .admin-card .arrow { color: var(--cyan); }
+    /* ── Unsplash showcase ── */
+    .unsplash-section {
+      position: relative; overflow: hidden;
+      height: 460px;
+      margin-top: -2px;
+    }
+    .unsplash-section img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center 40%;
+      display: block;
+      transition: transform 8s ease;
+    }
+    .unsplash-section:hover img { transform: scale(1.04); }
+    .unsplash-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        160deg,
+        rgba(5,20,35,.25) 0%,
+        rgba(5,20,35,.6) 50%,
+        rgba(5,20,35,.9) 100%
+      );
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: flex-start;
+      padding: 3rem 5%;
+    }
+    .unsplash-badge {
+      display: inline-flex; align-items: center; gap: .45rem;
+      background: rgba(16,185,129,.22); border: 1px solid rgba(16,185,129,.5);
+      backdrop-filter: blur(10px);
+      color: #6ee7b7; padding: .38rem 1rem; border-radius: 50px;
+      font-size: .78rem; font-weight: 700; letter-spacing:.04em;
+      text-transform: uppercase; margin-bottom: 1.1rem;
+    }
+    .unsplash-caption {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 800; color: #fff; line-height: 1.2;
+      margin-bottom: .75rem; max-width: 560px;
+      text-shadow: 0 4px 20px rgba(0,0,0,.4);
+    }
+    .unsplash-caption span { color: #6ee7b7; }
+    .unsplash-sub {
+      font-size: 1rem; color: rgba(255,255,255,.72);
+      max-width: 440px; line-height: 1.6;
+      text-shadow: 0 1px 8px rgba(0,0,0,.35);
+      margin-bottom: 1.6rem;
+    }
+    .unsplash-stats {
+      display: flex; gap: 1.4rem; flex-wrap: wrap;
+    }
+    .us-stat {
+      text-align: center;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      backdrop-filter: blur(12px);
+      padding: .6rem 1.2rem; border-radius: 12px;
+    }
+    .us-stat-val { font-family:'Poppins',sans-serif; font-size:1.3rem; font-weight:800; color:#fff; }
+    .us-stat-lbl { font-size:.7rem; color:rgba(255,255,255,.6); text-transform:uppercase; letter-spacing:.06em; margin-top:.1rem; }
+    @media(max-width:700px){
+      .unsplash-section{ height:340px; }
+      .unsplash-stats { gap:.7rem; }
+      .us-stat { padding:.5rem .9rem; }
+      .us-stat-val { font-size:1rem; }
+    }
+    @media(max-width:600px){ .role-cards{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<!-- Restore theme immediately to avoid flash -->
+<script>
+  (function(){
+    const t = localStorage.getItem('ecoroute-theme');
+    if(t === 'light') document.body.dataset.theme = 'light';
+  })();
+</script>
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="navbar-brand"><span class="logo-icon">♻️</span> EcoRoute</div>
+  <div class="navbar-links">
+<a href="/dashboard">Dashboard</a>
+    <a href="/segregation">Waste Guide</a>
+  </div>
+  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+</nav>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Hero -->
+<section class="hero">
+  <!-- Unsplash background photo -->
+  <img
+    class="hero-img"
+    src="https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=1800&q=85&auto=format&fit=crop"
+    alt="Aerial view of a lush green sustainable city"
+    loading="eager"
+  />
+  <div class="float-icons">
+    <span class="fi">🚛</span><span class="fi">🗑️</span>
+    <span class="fi">♻️</span><span class="fi">🌿</span><span class="fi">📍</span>
+  </div>
+  <span class="hero-badge fade-up">🌱 AI-Powered Waste Management</span>
+  <h1 class="fade-up" style="animation-delay:.1s">
+    <span class="hero-gradient-text">Smart Waste Collection</span><br>Route Optimization
+  </h1>
+  <p class="fade-up" style="animation-delay:.2s">
+    Intelligent route planning using A*, BFS, DFS, IDA* &amp; Minimax. Reduce fuel costs, collect waste efficiently, and keep cities clean.
+  </p>
+  <div class="hero-ctas fade-up" style="animation-delay:.3s">
+    <a href="#get-started" class="btn btn-primary">GET STARTED</a>
+</div>
+</section>
+
+
+<!-- Features -->
+<section class="features">
+  <h2 style="text-align:center;margin-bottom:.6rem">Everything You Need</h2>
+  <p style="text-align:center;margin-bottom:3rem">From pathfinding to live truck tracking — all in one platform.</p>
+  <div class="grid-3">
+    <div class="feature-card fade-up">
+      <span class="feature-icon">🧠</span>
+      <h3>5 Algorithms</h3>
+      <p>Compare A*, BFS, DFS, IDA*, and Minimax with live performance metrics.</p>
+    </div>
+    <div class="feature-card fade-up" style="animation-delay:.1s">
+      <span class="feature-icon">🗺️</span>
+      <h3>Colony Map</h3>
+      <p>Node-based colony graph with terrain costs: Normal, Traffic &amp; Highway roads.</p>
+    </div>
+    <div class="feature-card fade-up" style="animation-delay:.2s">
+      <span class="feature-icon">🚛</span>
+      <h3>Live Tracking</h3>
+      <p>Two trucks animated simultaneously, assigned via Minimax optimization.</p>
+    </div>
+    <div class="feature-card fade-up" style="animation-delay:.3s">
+      <span class="feature-icon">🗑️</span>
+      <h3>Smart Bins</h3>
+      <p>Real-time bin status: Empty, Half-full, Full — with instant alerts.</p>
+    </div>
+    <div class="feature-card fade-up" style="animation-delay:.4s">
+      <span class="feature-icon">📊</span>
+      <h3>Dashboard</h3>
+      <p>Efficiency scores, waste collected, distance covered, bins serviced.</p>
+    </div>
+    <div class="feature-card fade-up" style="animation-delay:.5s">
+      <span class="feature-icon">♻️</span>
+      <h3>Waste Guide</h3>
+      <p>Segregation guide for Dry, Wet, Hazardous and E-waste categories.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Get Started -->
+<section class="roles" id="get-started">
+  <h2>Who Are You?</h2>
+  <p>Choose your role to access the right features for you.</p>
+  <div class="role-cards">
+    <a href="/login?role=user" class="role-card user-card glass">
+      <div class="icon">👤</div>
+      <h3>I'm a Resident</h3>
+      <p>View your area's collection schedule, report missed pickups, and track your local bin status.</p>
+      <div class="arrow">→</div>
+    </a>
+    <a href="/login?role=admin" class="role-card admin-card glass">
+      <div class="icon">🏛️</div>
+      <h3>I'm an Administrator</h3>
+      <p>Access the full dashboard — live truck tracking, algorithm lab, colony management, and analytics.</p>
+      <div class="arrow" style="color:var(--cyan)">→</div>
+    </a>
+  </div>
+</section>
+
+<footer style="border-top:1px solid var(--border);margin-top:4rem;font-size:.88rem;color:var(--muted)">
+
+  <!-- Top row: logo | nav | address -->
+  <div style="max-width:1100px;margin:0 auto;padding:2.2rem 1.5rem 1.6rem;display:grid;grid-template-columns:1fr auto 1fr;gap:2rem;align-items:start">
+
+    <!-- Left: logo + tagline -->
+    <div>
+      <div style="display:flex;align-items:center;gap:.55rem;margin-bottom:.6rem">
+        <span style="font-size:2rem;line-height:1">♻️</span>
+        <div>
+          <div style="font-size:1.25rem;font-weight:800;color:var(--text-strong);line-height:1.1">
+            <span style="color:#10b981">Eco</span>Route
+          </div>
+          <div style="font-size:.62rem;color:var(--muted);letter-spacing:.04em">Smart Waste Collection System</div>
+        </div>
+      </div>
+      <div style="font-size:.82rem;color:var(--muted);margin-top:.9rem">
+      <strong style="color:var(--text-strong)">Shambhavi &amp; Ankita</strong> &nbsp;&bull;&nbsp; CFAI 2026
+      </div>
+    </div>
+
+    <!-- Centre: nav links -->
+    <div style="display:flex;flex-direction:column;gap:.45rem;text-align:center">
+      <a href="/" style="color:#10b981;text-decoration:none;font-size:.86rem">Home</a>
+      <a href="/dashboard" style="color:#10b981;text-decoration:none;font-size:.86rem">Dashboard</a>
+      <a href="/segregation" style="color:#10b981;text-decoration:none;font-size:.86rem">Waste Guide</a>
+      <a href="/user" style="color:#10b981;text-decoration:none;font-size:.86rem">My Portal</a>
+    </div>
+
+    <!-- Right: address -->
+    <div style="text-align:right;font-size:.83rem;line-height:1.65;color:var(--muted)">
+      <strong style="color:var(--text)">Project:</strong> AI-Driven Waste Route Optimisation<br>
+      CFAI 2026 &nbsp;&bull;&nbsp; Smart City Initiative<br>
+      Built with Min-Max, UCS &amp; Real-Time Maps
+    </div>
+
+  </div>
+
+  <!-- Bottom bar: socials | phone | copyright -->
+  <div style="border-top:1px solid var(--border);padding:1rem 1.5rem;max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
+
+    <!-- Social icons -->
+    <div style="display:flex;gap:1rem;align-items:center">
+      <a href="#" aria-label="Facebook" style="color:var(--muted);text-decoration:none;font-size:1.1rem;transition:color .2s" onmouseover="this.style.color='#2d7d46'" onmouseout="this.style.color='var(--muted)'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+      </a>
+      <a href="#" aria-label="YouTube" style="color:var(--muted);text-decoration:none;font-size:1.1rem;transition:color .2s" onmouseover="this.style.color='#2d7d46'" onmouseout="this.style.color='var(--muted)'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>
+      </a>
+      <a href="#" aria-label="Instagram" style="color:var(--muted);text-decoration:none;font-size:1.1rem;transition:color .2s" onmouseover="this.style.color='#2d7d46'" onmouseout="this.style.color='var(--muted)'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      </a>
+      <a href="#" aria-label="LinkedIn" style="color:var(--muted);text-decoration:none;font-size:1.1rem;transition:color .2s" onmouseover="this.style.color='#2d7d46'" onmouseout="this.style.color='var(--muted)'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+      </a>
+      <a href="#" aria-label="X / Twitter" style="color:var(--muted);text-decoration:none;font-size:1.1rem;transition:color .2s" onmouseover="this.style.color='#2d7d46'" onmouseout="this.style.color='var(--muted)'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+    </div>
+
+    <!-- Phone -->
+    <div style="font-size:.83rem;color:var(--muted)">
+      ♪ EcoRoute &nbsp;&bull;&nbsp; Powered by Flask + Leaflet
+    </div>
+
+    <!-- Copyright -->
+    <div style="font-size:.78rem;color:var(--muted)">
+      Copyright &copy; 2026 EcoRoute &nbsp;|&nbsp; Made by Shambhavi &amp; Ankita
+    </div>
+
+  </div>
+</footer>
+
+
+<script>
+function toggleTheme(){
+  const body = document.body;
+  const btn = document.getElementById('theme-btn');
+  if(body.dataset.theme === 'light'){
+    body.removeAttribute('data-theme');
+    btn.textContent = '🌙 Dark';
+    localStorage.removeItem('ecoroute-theme');
+  } else {
+    body.dataset.theme = 'light';
+    btn.textContent = '☀️ Light';
+    localStorage.setItem('ecoroute-theme','light');
+  }
+}
+// Sync button label on load
+(function(){
+  const btn = document.getElementById('theme-btn');
+  if(document.body.dataset.theme === 'light') btn.textContent = '☀️ Light';
+})();
+</script>
+</body>
+</html>

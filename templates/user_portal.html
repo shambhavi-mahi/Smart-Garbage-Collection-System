@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>My Portal — EcoRoute</title>
+  <meta name="description" content="Manage your waste collection, report issues and request pickups — EcoRoute Resident Portal."/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    /* ══════════════════════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════════════════════ */
+    .mp-hero {
+      position: relative;
+      min-height: 340px;
+      display: flex; align-items: center;
+      background: linear-gradient(135deg, #e8f5e9 0%, #e0f2f1 50%, #e3f2fd 100%);
+      overflow: hidden;
+    }
+    .mp-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 15% 60%, rgba(16,185,129,.14) 0%, transparent 50%),
+        radial-gradient(circle at 85% 25%, rgba(6,182,212,.1) 0%, transparent 50%);
+    }
+    /* floating blobs */
+    .mp-blob {
+      position: absolute; border-radius: 50%; opacity: .1;
+      animation: blob-float 7s ease-in-out infinite;
+    }
+    @keyframes blob-float {
+      0%,100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-20px) scale(1.06); }
+    }
+
+    .mp-hero-inner {
+      position: relative; z-index: 2;
+      max-width: 1100px; width: 100%;
+      margin: 0 auto; padding: 2.5rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 2rem; flex-wrap: wrap;
+    }
+    .mp-hero-left {}
+    .mp-hero-badge {
+      display: inline-block;
+      background: rgba(16,185,129,.15); color: #059669;
+      border: 1px solid rgba(16,185,129,.4);
+      border-radius: 50px; padding: .3rem 1rem;
+      font-size: .72rem; font-weight: 700; letter-spacing: .07em;
+      margin-bottom: 1rem;
+    }
+    .mp-hero-left h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800; color: #0f172a; line-height: 1.2;
+      margin-bottom: .4rem;
+    }
+    .mp-hero-left h1 span {
+      background: linear-gradient(90deg, #059669, #0891b2);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .mp-hero-left p { font-size: .92rem; color: #475569; margin-bottom: 1.3rem; }
+    .mp-quick-actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+    .mp-qa-btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .55rem 1.2rem; border-radius: 50px;
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: .82rem;
+      cursor: pointer; transition: all .22s; border: none; text-decoration: none;
+    }
+    .mp-qa-primary {
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      color: #fff; box-shadow: 0 4px 18px rgba(16,185,129,.35);
+    }
+    .mp-qa-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(16,185,129,.45); }
+    .mp-qa-outline {
+      background: rgba(255,255,255,.6); color: #0f172a;
+      border: 1.5px solid rgba(16,185,129,.3);
+      backdrop-filter: blur(8px);
+    }
+    .mp-qa-outline:hover { background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.5); }
+
+    /* Hero right — pickup card */
+    .mp-hero-pickup {
+      background: rgba(255,255,255,.65);
+      backdrop-filter: blur(14px);
+      border: 1.5px solid rgba(16,185,129,.2);
+      border-radius: 20px;
+      padding: 1.4rem 1.6rem;
+      min-width: 240px;
+      box-shadow: 0 8px 32px rgba(16,185,129,.1);
+    }
+    .mp-hero-pickup .lbl {
+      font-size: .68rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: #64748b; margin-bottom: .6rem;
+    }
+    .mp-next-date {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.4rem; font-weight: 800;
+      background: linear-gradient(90deg, #059669, #0891b2);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: .25rem;
+    }
+    .mp-next-sub { font-size: .8rem; color: #64748b; margin-bottom: .8rem; }
+    .mp-countdown-pill {
+      display: inline-block;
+      padding: .28rem .85rem; border-radius: 50px;
+      font-size: .75rem; font-weight: 700;
+      background: rgba(6,182,212,.12); color: #0891b2;
+      border: 1px solid rgba(6,182,212,.3);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       STATS ROW
+    ══════════════════════════════════════════════════════════ */
+    .mp-stats {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; justify-content: center;
+    }
+    .mp-stat {
+      flex: 1; min-width: 130px;
+      text-align: center; padding: 1.1rem 1rem;
+      border-right: 1px solid var(--border);
+    }
+    .mp-stat:last-child { border-right: none; }
+    .mp-stat-num {
+      font-size: 1.45rem; font-weight: 800;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .mp-stat-lbl { font-size: .7rem; color: var(--muted); margin-top: .1rem; }
+
+    /* ══════════════════════════════════════════════════════════
+       LAYOUT BODY
+    ══════════════════════════════════════════════════════════ */
+    .mp-body {
+      max-width: 1100px; margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       TABS
+    ══════════════════════════════════════════════════════════ */
+    .mp-tabs {
+      display: flex; gap: .4rem; flex-wrap: wrap;
+      margin-bottom: 2rem;
+      background: var(--card-solid);
+      border: 1px solid var(--border);
+      border-radius: 50px; padding: .35rem;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: .52rem 1.15rem; border-radius: 50px;
+      border: none; background: transparent;
+      color: var(--muted);
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: .82rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      color: #fff; box-shadow: 0 3px 12px rgba(16,185,129,.3);
+    }
+    .tab-btn:hover:not(.active) { color: #059669; background: rgba(16,185,129,.07); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ══════════════════════════════════════════════════════════
+       SECTION CARD CONTAINER
+    ══════════════════════════════════════════════════════════ */
+    .mp-section-hdr {
+      margin-bottom: 1.2rem;
+    }
+    .mp-section-hdr h3 { font-size: 1.2rem; font-weight: 800; color: var(--text-strong); margin-bottom: .2rem; }
+    .mp-section-hdr p  { font-size: .83rem; color: var(--muted); }
+
+    /* ══════════════════════════════════════════════════════════
+       COLONY SELECTOR
+    ══════════════════════════════════════════════════════════ */
+    .colony-selector-wrap {
+      background: var(--card-solid); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1rem 1.3rem;
+      margin-bottom: 1.6rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .colony-sel-label {
+      font-family: 'Poppins', sans-serif; font-weight: 700;
+      font-size: .84rem; color: var(--text-strong); white-space: nowrap;
+    }
+    .colony-pills { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .cpill {
+      padding: .38rem .95rem; border-radius: 50px;
+      border: 1.5px solid var(--border);
+      background: var(--input-bg); color: var(--muted);
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: .8rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .cpill:hover { border-color: rgba(16,185,129,.5); color: #059669; background: rgba(16,185,129,.07); }
+    .cpill.active {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      border-color: transparent; color: #fff;
+      box-shadow: 0 3px 12px rgba(16,185,129,.3);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       PICKUP HERO CARDS (inside tab)
+    ══════════════════════════════════════════════════════════ */
+    #pickup-hero {
+      display: flex; align-items: stretch;
+      gap: 1.2rem; flex-wrap: wrap; margin: 1.2rem 0 1.8rem;
+    }
+    .pickup-hero-card {
+      flex: 1; min-width: 200px; max-width: 320px;
+      padding: 1.6rem 1.5rem; border-radius: 20px;
+      text-align: center; position: relative; overflow: hidden;
+      transition: transform .25s, box-shadow .25s;
+    }
+    .pickup-hero-card:hover { transform: translateY(-5px); }
+    .last-card {
+      background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(16,185,129,.04));
+      border: 1.5px solid rgba(16,185,129,.35);
+      box-shadow: 0 6px 28px rgba(16,185,129,.12);
+    }
+    .next-card {
+      background: linear-gradient(135deg, rgba(6,182,212,.14), rgba(6,182,212,.04));
+      border: 1.5px solid rgba(6,182,212,.4);
+      box-shadow: 0 6px 28px rgba(6,182,212,.12);
+    }
+    .phc-icon { font-size: 2.5rem; margin-bottom: .55rem; }
+    .phc-label { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+    .phc-date  { font-family: 'Poppins', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-strong); margin-bottom: .25rem; }
+    .phc-sub   { font-size: .8rem; color: var(--muted); }
+    .phc-countdown {
+      display: inline-block; margin-top: .75rem;
+      padding: .3rem .9rem; border-radius: 50px;
+      font-size: .77rem; font-weight: 700;
+      background: rgba(6,182,212,.15); color: #0891b2;
+      border: 1px solid rgba(6,182,212,.3);
+    }
+    .phc-urgent {
+      background: rgba(245,158,11,.18) !important;
+      color: #f59e0b !important; border-color: rgba(245,158,11,.4) !important;
+      animation: pulse-badge 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-badge { 0%,100% { opacity:1; } 50% { opacity:.6; } }
+    .phc-divider { font-size: 1.8rem; color: var(--muted); opacity:.4; flex-shrink:0; align-self:center; animation: bounce-arrow 2s ease-in-out infinite; }
+    @keyframes bounce-arrow { 0%,100% { transform:translateY(0); } 50% { transform:translateY(6px); } }
+
+    /* ══════════════════════════════════════════════════════════
+       SCHEDULE CARDS
+    ══════════════════════════════════════════════════════════ */
+    .sched-section-label {
+      font-size: .75rem; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .75rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .sched-section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    #schedule-cards { display: flex; flex-direction: column; gap: .65rem; }
+    .sched-item {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem 1.2rem;
+      border-radius: 14px;
+      background: var(--card-solid);
+      border: 1px solid var(--border);
+      transition: border-color .2s, background .2s, transform .2s;
+      color: var(--text);
+    }
+    .sched-item:hover { border-color: rgba(16,185,129,.3); transform: translateX(4px); }
+    .sched-mine {
+      border-color: rgba(6,182,212,.45) !important;
+      background: linear-gradient(90deg, rgba(6,182,212,.06), var(--card-solid)) !important;
+      box-shadow: 0 2px 14px rgba(6,182,212,.08);
+    }
+    .sched-left { min-width: 80px; }
+    .sched-colony { font-family:'Poppins',sans-serif; font-size:.92rem; font-weight:700; color:var(--text-strong); }
+    .sched-truck  { font-size:.7rem; color:var(--muted); margin-top:.15rem; }
+    .sched-mid { flex:1; display:flex; flex-direction:column; gap:.2rem; font-size:.8rem; }
+    .sched-last strong { color:var(--emerald); }
+    .sched-next strong { color:var(--cyan); }
+    .sched-last, .sched-next { color:var(--muted); }
+    .sched-badge { padding:.28rem .75rem; border-radius:50px; font-size:.7rem; font-weight:700; white-space:nowrap; }
+    .badge-today    { background:rgba(245,158,11,.18); color:#f59e0b; border:1px solid rgba(245,158,11,.35); animation:pulse-badge 1.4s ease-in-out infinite; }
+    .badge-soon     { background:rgba(6,182,212,.15);  color:#0891b2; border:1px solid rgba(6,182,212,.3); }
+    .badge-upcoming { background:rgba(16,185,129,.1);  color:#059669; border:1px solid rgba(16,185,129,.25); }
+
+    /* ══════════════════════════════════════════════════════════
+       BIN STATUS
+    ══════════════════════════════════════════════════════════ */
+    #user-bins {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       FORM CARD
+    ══════════════════════════════════════════════════════════ */
+    .form-card {
+      background: var(--card-solid);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+    }
+    .success-banner {
+      padding: .85rem 1.2rem; border-radius: 12px;
+      background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3);
+      color: #059669; font-size: .88rem; margin-bottom: 1.2rem; display: none;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       WASTE GUIDE MINI CARDS
+    ══════════════════════════════════════════════════════════ */
+    .guide-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.8rem;
+    }
+    .guide-mini-card {
+      border-radius: 18px; overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--card-solid);
+      transition: transform .22s, box-shadow .22s;
+    }
+    .guide-mini-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+    .guide-mini-img {
+      width: 100%; height: 130px; object-fit: cover; display: block;
+    }
+    .guide-mini-body { padding: 1rem 1.1rem 1.2rem; }
+    .guide-mini-body h4 { font-size: .92rem; font-weight: 700; margin-bottom: .3rem; }
+    .guide-mini-body p  { font-size: .78rem; color: var(--muted); line-height: 1.5; margin: 0; }
+
+    /* ══════════════════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════════════════ */
+    @media(max-width:640px) {
+      .mp-tabs { width: 100%; justify-content: center; }
+      .mp-hero-inner { flex-direction: column; }
+      .mp-hero-pickup { min-width: unset; width: 100%; }
+      #pickup-hero { flex-direction: column; }
+      .pickup-hero-card { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<script>
+  (function(){
+    const t = localStorage.getItem('ecoroute-theme');
+    if(t === 'light') document.body.dataset.theme = 'light';
+  })();
+</script>
+
+<nav class="navbar">
+  <div class="navbar-brand"><a href="/" style="color:inherit;text-decoration:none">♻️ EcoRoute</a></div>
+  <div class="navbar-links">
+    <a href="/">Home</a>
+    <a href="/dashboard">Command Center</a>
+    <a href="/user" class="active">My Portal</a>
+    <a href="/segregation">Waste Guide</a>
+  </div>
+  <div style="display:flex;gap:.6rem;align-items:center">
+    <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+    <a href="/logout" class="btn btn-sm btn-outline">Logout</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+<div class="mp-hero">
+  <!-- Floating blobs -->
+  <div class="mp-blob" style="width:320px;height:320px;background:#10b981;top:-100px;right:5%;animation-duration:8s"></div>
+  <div class="mp-blob" style="width:200px;height:200px;background:#06b6d4;bottom:-60px;left:8%;animation-duration:6s;animation-delay:1.2s"></div>
+  <div class="mp-blob" style="width:140px;height:140px;background:#34d399;top:40%;left:38%;animation-duration:9s;animation-delay:.5s"></div>
+
+  <div class="mp-hero-inner">
+    <div class="mp-hero-left fade-up">
+      <h1>Welcome back,<br><span>{{ user_name }}</span> 👋</h1>
+      <p>Colony <strong>{{ user_colony }}</strong> · {{ user_address }}</p>
+      <div class="mp-quick-actions">
+        <button class="mp-qa-btn mp-qa-primary" onclick="showTab('report', document.querySelector('[onclick*=report]'))">🚨 Report Issue</button>
+        <button class="mp-qa-btn mp-qa-outline" onclick="showTab('request', document.querySelector('[onclick*=request]'))">📦 Request Pickup</button>
+        <a href="/segregation" class="mp-qa-btn mp-qa-outline">♻️ Waste Guide</a>
+      </div>
+    </div>
+
+    <!-- Next Pickup mini-card -->
+    <div class="mp-hero-pickup fade-up" style="animation-delay:.1s" id="hero-pickup-card">
+      <div class="lbl">🚛 Next Scheduled Pickup</div>
+      <div class="mp-next-date" id="hero-next-date">Loading…</div>
+      <div class="mp-next-sub" id="hero-next-sub">Colony {{ user_colony }}</div>
+      <div class="mp-countdown-pill" id="hero-countdown">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STATS BAR ══════════════════════════════════════════════════════ -->
+<div class="mp-stats">
+  <div class="mp-stat">
+    <div class="mp-stat-num">7</div>
+    <div class="mp-stat-lbl">Active Colonies</div>
+  </div>
+  <div class="mp-stat">
+    <div class="mp-stat-num">21</div>
+    <div class="mp-stat-lbl">Collection Bins</div>
+  </div>
+  <div class="mp-stat">
+    <div class="mp-stat-num">4</div>
+    <div class="mp-stat-lbl">Trucks Deployed</div>
+  </div>
+  <div class="mp-stat">
+    <div class="mp-stat-num">Daily</div>
+    <div class="mp-stat-lbl">Wet Waste Pickup</div>
+  </div>
+</div>
+
+<!-- ══ MAIN BODY ══════════════════════════════════════════════════════ -->
+<div class="mp-body">
+
+  <!-- TABS -->
+  <div class="mp-tabs">
+    <button class="tab-btn active" onclick="showTab('schedule',this)">📅 Schedule</button>
+    <button class="tab-btn" onclick="showTab('bins',this)">🗑️ Bin Status</button>
+    <button class="tab-btn" onclick="showTab('report',this)">🚨 Report Issue</button>
+    <button class="tab-btn" onclick="showTab('request',this)">📦 Request Pickup</button>
+    <button class="tab-btn" onclick="showTab('guide',this)">♻️ Waste Guide</button>
+  </div>
+
+  <!-- ── SCHEDULE TAB ─────────────────────────────────────────────── -->
+  <div class="tab-pane active" id="tab-schedule">
+    <div class="mp-section-hdr">
+      <h3>📅 Your Collection Schedule</h3>
+      <p>Select your colony to see your personalised pickup timetable.</p>
+    </div>
+
+    <!-- Colony Selector -->
+    <div class="colony-selector-wrap">
+      <div class="colony-sel-label">🏘️ My Colony</div>
+      <div class="colony-pills" id="colony-pills">
+        <button class="cpill {% if user_colony == 'A' %}active{% endif %}" data-col="A" onclick="selectColony('A',this)">Colony A</button>
+        <button class="cpill {% if user_colony == 'B' %}active{% endif %}" data-col="B" onclick="selectColony('B',this)">Colony B</button>
+        <button class="cpill {% if user_colony == 'C' %}active{% endif %}" data-col="C" onclick="selectColony('C',this)">Colony C</button>
+        <button class="cpill {% if user_colony == 'D' %}active{% endif %}" data-col="D" onclick="selectColony('D',this)">Colony D</button>
+        <button class="cpill {% if user_colony == 'E' %}active{% endif %}" data-col="E" onclick="selectColony('E',this)">Colony E</button>
+        <button class="cpill {% if user_colony == 'F' %}active{% endif %}" data-col="F" onclick="selectColony('F',this)">Colony F</button>
+        <button class="cpill {% if user_colony == 'G' %}active{% endif %}" data-col="G" onclick="selectColony('G',this)">Colony G</button>
+      </div>
+    </div>
+
+    <!-- Last & Next Pickup Hero -->
+    <div id="pickup-hero"><!-- filled by JS --></div>
+
+    <!-- All Colonies Schedule -->
+    <div class="sched-section-label">All Colonies Schedule</div>
+    <div id="schedule-cards"></div>
+  </div>
+
+  <!-- ── BIN STATUS TAB ────────────────────────────────────────────── -->
+  <div class="tab-pane" id="tab-bins">
+    <div class="mp-section-hdr">
+      <h3>🗑️ Your Area Bin Status</h3>
+      <p>Live fill levels for bins in your colony — updated every 30 seconds.</p>
+    </div>
+    <div id="user-bins"></div>
+    <button class="btn btn-outline" onclick="loadBins()" style="margin-top:1.2rem">🔄 Refresh Status</button>
+  </div>
+
+  <!-- ── REPORT TAB ────────────────────────────────────────────────── -->
+  <div class="tab-pane" id="tab-report">
+    <div class="mp-section-hdr">
+      <h3>🚨 Report Missed Collection</h3>
+      <p>Let us know and we'll dispatch a truck within 24 hours.</p>
+    </div>
+    <div class="form-card">
+      <div id="report-success" class="success-banner">✅ Report submitted! We'll dispatch a truck within 24 hours.</div>
+      <div class="form-group">
+        <label class="form-label">Colony / Area</label>
+        <select class="form-input" id="report-colony">
+          <option>Colony A</option><option>Colony B</option><option selected>Colony D</option>
+          <option>Colony C</option><option>Colony E</option><option>Colony F</option><option>Colony G</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date of Missed Collection</label>
+        <input type="date" class="form-input" id="report-date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-input" rows="3" id="report-desc" placeholder="Describe the issue…" style="resize:vertical"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="submitReport()">📤 Submit Report</button>
+    </div>
+  </div>
+
+  <!-- ── REQUEST PICKUP TAB ─────────────────────────────────────────── -->
+  <div class="tab-pane" id="tab-request">
+    <div class="mp-section-hdr">
+      <h3>📦 Request Special Pickup</h3>
+      <p>Need a one-off collection? We'll be there in 2–4 hours.</p>
+    </div>
+    <div class="form-card">
+      <div id="pickup-success" class="success-banner">✅ Pickup request submitted! Estimated time: 2–4 hours.</div>
+      <div class="form-group">
+        <label class="form-label">Waste Type</label>
+        <select class="form-input" id="pickup-type">
+          <option>Dry Waste</option><option>Wet Waste</option>
+          <option>Hazardous</option><option>E-Waste</option><option>Bulk / Furniture</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input type="text" class="form-input" placeholder="Enter your address" id="pickup-addr"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preferred Time</label>
+        <input type="datetime-local" class="form-input" id="pickup-time"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Additional Notes</label>
+        <textarea class="form-input" rows="2" placeholder="Any special instructions…" style="resize:vertical"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="submitPickup()">📤 Request Pickup</button>
+    </div>
+  </div>
+
+  <!-- ── WASTE GUIDE TAB ────────────────────────────────────────────── -->
+  <div class="tab-pane" id="tab-guide">
+    <div class="mp-section-hdr">
+      <h3>♻️ Quick Waste Segregation Guide</h3>
+      <p>Sort it right — protect the city, reduce landfill.</p>
+    </div>
+
+    <div class="guide-mini-grid">
+      <!-- Dry -->
+      <div class="guide-mini-card">
+        <img class="guide-mini-img" loading="lazy"
+          src="https://images.unsplash.com/photo-1604187351574-c75ca79f5807?w=600&auto=format&fit=crop&q=80"
+          alt="Recycling bins"
+          onerror="this.style.display='none'"/>
+        <div class="guide-mini-body">
+          <h4 style="color:#059669">📦 Dry Waste</h4>
+          <p>Paper, cardboard, plastic bottles, cans, glass jars. Keep clean and dry before disposal.</p>
+        </div>
+      </div>
+      <!-- Wet -->
+      <div class="guide-mini-card">
+        <img class="guide-mini-img" loading="lazy"
+          src="https://images.unsplash.com/photo-1498579150354-977475b7ea0b?w=600&auto=format&fit=crop&q=80"
+          alt="Organic waste vegetables"
+          onerror="this.style.display='none'"/>
+        <div class="guide-mini-body">
+          <h4 style="color:#d97706">🥕 Wet Waste</h4>
+          <p>Food scraps, vegetable peels, garden waste. Use separate green bins daily.</p>
+        </div>
+      </div>
+      <!-- Hazardous -->
+      <div class="guide-mini-card">
+        <img class="guide-mini-img" loading="lazy"
+          src="https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=600&auto=format&fit=crop&q=80"
+          alt="Hazardous waste"
+          onerror="this.style.display='none'"/>
+        <div class="guide-mini-body">
+          <h4 style="color:#ef4444">☢️ Hazardous</h4>
+          <p>Batteries, chemicals, paints, medicines. Never mix with regular waste — special drop-offs only.</p>
+        </div>
+      </div>
+      <!-- E-Waste -->
+      <div class="guide-mini-card">
+        <img class="guide-mini-img" loading="lazy"
+          src="https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=600&auto=format&fit=crop&q=80"
+          alt="Electronics e-waste"
+          onerror="this.style.display='none'"/>
+        <div class="guide-mini-body">
+          <h4 style="color:#0891b2">💻 E-Waste</h4>
+          <p>Old phones, chargers, laptops, TVs. Drop at certified e-waste collection centres.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center">
+      <a href="/segregation" class="mp-qa-btn mp-qa-primary" style="display:inline-flex">View Full Waste Guide →</a>
+    </div>
+  </div>
+
+</div><!-- end mp-body -->
+
+<footer style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--border)">
+  ♻️ EcoRoute — Smart Waste Collection System &nbsp;|&nbsp; Smart City Initiative
+</footer>
+
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+<script>
+// Seed selectedColony from server-side session
+selectedColony = '{{ user_colony }}';
+restoreColonyPill();
+buildSchedule();
+startCountdownTicker();
+loadBins();
+
+// Also update hero pickup card whenever schedule loads
+(function patchHeroCard() {
+  const orig = window.buildSchedule;
+  if (!orig) { setTimeout(patchHeroCard, 200); return; }
+  window.buildSchedule = function() {
+    orig();
+    setTimeout(syncHeroPickup, 100);
+  };
+  syncHeroPickup();
+})();
+
+function syncHeroPickup() {
+  // Pull next pickup data from the main pickup hero cards
+  const nextDate = document.getElementById('hero-next-date');
+  const nextSub  = document.getElementById('hero-next-sub');
+  const countdown= document.getElementById('hero-countdown');
+  // Try to read from built schedule cards
+  const phcDate = document.querySelector('.phc-date');
+  const phcSub  = document.querySelector('.phc-sub');
+  const phcCount= document.querySelector('.phc-countdown');
+  if (phcDate && nextDate) nextDate.textContent = phcDate.textContent;
+  if (phcSub  && nextSub)  nextSub.textContent  = phcSub.textContent;
+  if (phcCount&& countdown) countdown.textContent= phcCount.textContent;
+}
+</script>
+</body>
+</html>

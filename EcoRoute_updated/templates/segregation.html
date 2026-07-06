@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Waste Segregation Guide — EcoRoute</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    .guide-hero { text-align:center; padding:4rem 2rem 2rem; }
+    .guide-hero p { max-width:560px; margin:0 auto 2rem; }
+    .categories { max-width:1100px; margin:0 auto; padding:0 1.5rem 4rem; display:grid; grid-template-columns:repeat(2,1fr); gap:1.5rem; }
+    .cat-card {
+      padding:2rem; border-radius:var(--radius); border:1px solid var(--border);
+      background: var(--card-solid); transition:all var(--transition);
+    }
+    .cat-card:hover { transform:translateY(-5px); box-shadow: var(--shadow); }
+    .cat-icon { font-size:3rem; margin-bottom:1rem; }
+    .cat-card h3 { margin-bottom:.5rem; }
+    .items-list { list-style:none; margin-top:.8rem; display:flex; flex-wrap:wrap; gap:.4rem; }
+    .items-list li { padding:.25rem .7rem; border-radius:50px; font-size:.78rem; font-weight:500; }
+    .do-list li  { background:rgba(16,185,129,.12); color:var(--emerald); }
+    .dont-list li { background:rgba(239,68,68,.12); color:#ef4444; }
+    .tips { max-width:800px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+    .tip-item {
+      display:flex; gap:1rem; align-items:flex-start; padding:1rem;
+      border-radius:var(--radius-sm); background:var(--card-solid);
+      border:1px solid var(--border); margin-bottom:.7rem; color: var(--text);
+    }
+    .tip-num { width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--emerald),var(--cyan));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0;color:#fff; }
+    @media(max-width:640px){ .categories{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<!-- Restore theme immediately -->
+<script>
+  (function(){
+    const t = localStorage.getItem('ecoroute-theme');
+    if(t === 'light') document.body.dataset.theme = 'light';
+  })();
+</script>
+<nav class="navbar">
+  <div class="navbar-brand"><a href="/" style="color:inherit;text-decoration:none">♻️ EcoRoute</a></div>
+  <div class="navbar-links">
+    <a href="/">Home</a>
+    <a href="/visualizer">Algorithm Lab</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/user">My Portal</a>
+    <a href="/segregation" class="active">Waste Guide</a>
+  </div>
+  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+</nav>
+
+<div class="page-wrapper">
+  <div class="guide-hero fade-up">
+    <span class="badge badge-emerald" style="margin-bottom:1rem">♻️ Segregation Guide</span>
+    <h1>Waste <span class="gradient-text">Segregation Guide</span></h1>
+    <p>Proper waste segregation is the first step toward a cleaner city. Learn how to sort your waste correctly.</p>
+  </div>
+
+  <div class="categories">
+    <!-- Dry Waste -->
+    <div class="cat-card fade-up" style="border-color:rgba(16,185,129,.3)">
+      <div class="cat-icon">📦</div>
+      <h3 style="color:var(--emerald)">Dry Waste</h3>
+      <p style="font-size:.88rem">Items that are dry and can be recycled or repurposed.</p>
+      <div style="margin-top:1rem">
+        <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.4rem">✅ INCLUDE:</div>
+        <ul class="items-list do-list">
+          <li>Paper</li><li>Cardboard</li><li>Plastic bottles</li>
+          <li>Cans</li><li>Glass jars</li><li>Newspapers</li><li>Packaging</li>
+        </ul>
+      </div>
+      <div style="margin-top:.8rem">
+        <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.4rem">❌ EXCLUDE:</div>
+        <ul class="items-list dont-list">
+          <li>Food-stained paper</li><li>Wet items</li><li>Broken glass</li>
+        </ul>
+      </div>
+      <div style="margin-top:1rem;padding:.7rem;background:rgba(16,185,129,.08);border-radius:var(--radius-sm);font-size:.8rem;color:var(--emerald);border:1px solid rgba(16,185,129,.2)">
+        🗓️ Collection: Monday &amp; Thursday
+      </div>
+    </div>
+
+    <!-- Wet Waste -->
+    <div class="cat-card fade-up" style="border-color:rgba(245,158,11,.3);animation-delay:.1s">
+      <div class="cat-icon">🥕</div>
+      <h3 style="color:#d97706">Wet Waste</h3>
+      <p style="font-size:.88rem">Organic material that can be composted into rich fertiliser.</p>
+      <div style="margin-top:1rem">
+        <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.4rem">✅ INCLUDE:</div>
+        <ul class="items-list">
+          <li style="background:rgba(245,158,11,.12);color:#d97706">Food scraps</li>
+          <li style="background:rgba(245,158,11,.12);color:#d97706">Vegetable peels</li>
+          <li style="background:rgba(245,158,11,.12);color:#d97706">Garden waste</li>
+          <li style="background:rgba(245,158,11,.12);color:#d97706">Cooked food</li>
+          <li style="background:rgba(245,158,11,.12);color:#d97706">Tea bags</li>
+          <li style="background:rgba(245,158,11,.12);color:#d97706">Eggshells</li>
+        </ul>
+      </div>
+      <div style="margin-top:.8rem">
+        <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.4rem">❌ EXCLUDE:</div>
+        <ul class="items-list dont-list">
+          <li>Plastic</li><li>Metal</li><li>Glass</li>
+        </ul>
+      </div>
+      <div style="margin-top:1rem;padding:.7rem;background:rgba(245,158,11,.08);border-radius:var(--radius-sm);font-size:.8rem;color:#d97706;border:1px solid rgba(245,158,11,.2)">
+        🗓️ Collection: Daily (green bin)
+      </div>
+    </div>
+
+    <!-- Hazardous -->
+    <div class="cat-card fade-up" style="border-color:rgba(239,68,68,.3);animation-delay:.2s">
+      <div class="cat-icon">☢️</div>
+      <h3 style="color:#ef4444">Hazardous Waste</h3>
+      <p style="font-size:.88rem">Items that can harm people or the environment — need special disposal.</p>
+      <div style="margin-top:1rem">
+        <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.4rem">⚠️ INCLUDES:</div>
+        <ul class="items-list dont-list">
+          <li>Batteries</li><li>Paints</li><li>Chemicals</li>
+          <li>Medicines</li><li>Pesticides</li><li>Motor oil</li><li>Aerosols</li>
+        </ul>
+      </div>
+      <div style="margin-top:.8rem;padding:.8rem;background:rgba(239,68,68,.08);border-radius:var(--radius-sm);font-size:.82rem;color:#ef4444;border:1px solid rgba(239,68,68,.2)">
+        ⚠️ NEVER mix with regular waste. Use designated hazardous waste drop-off points.
+      </div>
+      <div style="margin-top:.6rem;padding:.7rem;background:rgba(239,68,68,.05);border-radius:var(--radius-sm);font-size:.8rem;color:#ef4444">
+        🗓️ Collection: Special monthly drives
+      </div>
+    </div>
+
+    <!-- E-Waste -->
+    <div class="cat-card fade-up" style="border-color:rgba(6,182,212,.3);animation-delay:.3s">
+      <div class="cat-icon">💻</div>
+      <h3 style="color:var(--cyan)">E-Waste</h3>
+      <p style="font-size:.88rem">Electronic devices contain rare metals and toxic components — always recycle.</p>
+      <div style="margin-top:1rem">
+        <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.4rem">⚠️ INCLUDES:</div>
+        <ul class="items-list" style="gap:.4rem">
+          <li style="background:rgba(6,182,212,.12);color:var(--cyan);padding:.25rem .7rem;border-radius:50px;font-size:.78rem">Old phones</li>
+          <li style="background:rgba(6,182,212,.12);color:var(--cyan);padding:.25rem .7rem;border-radius:50px;font-size:.78rem">Laptops</li>
+          <li style="background:rgba(6,182,212,.12);color:var(--cyan);padding:.25rem .7rem;border-radius:50px;font-size:.78rem">Chargers</li>
+          <li style="background:rgba(6,182,212,.12);color:var(--cyan);padding:.25rem .7rem;border-radius:50px;font-size:.78rem">TVs</li>
+          <li style="background:rgba(6,182,212,.12);color:var(--cyan);padding:.25rem .7rem;border-radius:50px;font-size:.78rem">Printers</li>
+          <li style="background:rgba(6,182,212,.12);color:var(--cyan);padding:.25rem .7rem;border-radius:50px;font-size:.78rem">Hard drives</li>
+        </ul>
+      </div>
+      <div style="margin-top:.8rem;padding:.7rem;background:rgba(6,182,212,.06);border-radius:var(--radius-sm);font-size:.8rem;color:var(--cyan);border:1px solid rgba(6,182,212,.2)">
+        🗓️ Drop-off: Certified e-waste centres only
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="tips">
+    <h2 style="text-align:center;margin-bottom:.5rem">💡 Pro Tips</h2>
+    <p style="text-align:center;margin-bottom:2rem">Simple habits that make a big difference.</p>
+    <div class="tip-item"><div class="tip-num">1</div><div><strong>Rinse before recycling</strong> — Empty and rinse containers before placing them in dry waste bins to avoid contamination.</div></div>
+    <div class="tip-item"><div class="tip-num">2</div><div><strong>Compost at home</strong> — Start a small compost bin for wet waste. It reduces truck trips and creates fertiliser.</div></div>
+    <div class="tip-item"><div class="tip-num">3</div><div><strong>Label your bins</strong> — Colour-code: 🟢 Green for wet, 🔵 Blue for dry, 🔴 Red for hazardous.</div></div>
+    <div class="tip-item"><div class="tip-num">4</div><div><strong>Reduce first</strong> — The best waste is no waste. Choose products with minimal packaging.</div></div>
+    <div class="tip-item"><div class="tip-num">5</div><div><strong>Report overflowing bins</strong> — Use the Resident Portal to report full bins so trucks are rerouted immediately.</div></div>
+  </div>
+</div>
+
+<footer style="text-align:center;padding:2rem;color:var(--muted);font-size:.85rem;border-top:1px solid var(--border)">
+  ♻️ EcoRoute — Smart Waste Collection System
+</footer>
+
+<script>
+function toggleTheme(){
+  const b=document.body, btn=document.getElementById('theme-btn');
+  if(b.dataset.theme==='light'){
+    b.removeAttribute('data-theme'); btn.textContent='🌙 Dark';
+    localStorage.removeItem('ecoroute-theme');
+  } else {
+    b.dataset.theme='light'; btn.textContent='☀️ Light';
+    localStorage.setItem('ecoroute-theme','light');
+  }
+}
+(function(){
+  const btn = document.getElementById('theme-btn');
+  if(document.body.dataset.theme === 'light') btn.textContent = '☀️ Light';
+})();
+</script>
+</body>
+</html>
