@@ -21,7 +21,7 @@
 
 ## 🧠 Overview
 
-**EcoRoute** is a full-stack Smart City Garbage Collection Platform developed as part of a hackathon/AI project. It simulates an intelligent waste management system for a city divided into 7 residential colonies (A–G), each equipped with IoT-enabled smart bins.
+**EcoRoute** is a full-stack Smart City Garbage Collection Platform. It simulates an intelligent waste management system for a city divided into 7 residential colonies (A–G), each equipped with IoT-enabled smart bins.
 
 The platform allows:
 - **Administrators** to view real-time bin fill levels, dispatch trucks, and compare AI routing algorithms
@@ -51,12 +51,12 @@ The platform allows:
 ## 🛠️ Tech Stack
 
 ### Backend
-- **Python 3.x**
+- **Python 3.14**
 - **Flask** ≥ 2.3.0 — web framework & REST API
 - Standard library: `heapq`, `math`, `random`, `time`, `json`, `urllib`
 
 ### Frontend
-- **HTML5 / Vanilla CSS / JavaScript**
+- **HTML / CSS / JavaScript**
 - **Leaflet.js** — interactive map rendering
 - **Chart.js** — algorithm performance charts
 - **OSRM API** — real-world road routing fallback
