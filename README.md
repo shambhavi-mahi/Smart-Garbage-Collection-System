@@ -15,7 +15,9 @@
 - [Usage Guide](#-usage-guide)
 - [API Reference](#-api-reference)
 - [Demo Credentials](#-demo-credentials)
+- [City Layout](#-city-layout)
 - [Screenshots](#-screenshots)
+- [Contributing](#-contributing)
 
 ---
 
@@ -265,6 +267,48 @@ The simulation covers **Bangalore, India** with the following nodes:
 **Fleet:** 4 trucks (Alpha, Beta, Gamma, Delta) with capacities from 600–1000 kg per shift.
 
 **Road Terrains:** `normal` (cost ×1.0), `highway` (cost ×0.5, faster), `traffic` (cost ×3.0, congested).
+
+---
+
+## 📸 Screenshots
+
+### 🏠 Landing Page
+![Landing Page](static/screenshots/01_landing.png)
+
+---
+
+### 🔐 Login Page
+![Login Page](static/screenshots/02_login.png)
+
+---
+
+### 📊 Admin Dashboard
+![Admin Dashboard](static/screenshots/03_dashboard.png)
+
+---
+
+### 🤖 Algorithm Visualizer
+![Algorithm Visualizer](static/screenshots/04_algorithm_visualizer.png)
+
+---
+
+### 🗺️ City Map View
+![City Map](static/screenshots/05_city_map.png)
+
+---
+
+### ♻️ Waste Segregation Guide
+![Segregation Guide](static/screenshots/06_segregation.png)
+
+---
+
+### 👤 Resident Login
+![Resident Login](static/screenshots/07_resident_login.png)
+
+---
+
+### 🏘️ Resident Portal
+![Resident Portal](static/screenshots/08_user_portal.png)
 
 ---
 
